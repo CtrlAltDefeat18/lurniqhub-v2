@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LurniqHub{% endblock %}</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1976D2',
+                        secondary: '#0097A7',
+                        ocean: '#006994',
+                        wave: '#4ECDC4',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    
+    <!-- Alpine.js (for interactivity) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    
+    {% if session.get('user_id') %}
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-primary to-ocean text-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <!-- Logo -->
+                <a href="{{ url_for('dashboard.home') }}" class="flex items-center gap-2 text-2xl font-bold">
+                    <span class="material-icons-round text-4xl">sailing</span>
+                    <span>LurniqHub</span>
+                </a>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center gap-6">
+                    <a href="{{ url_for('dashboard.home') }}" class="flex items-center gap-2 hover:bg-white/10 px-4 py-2 rounded-lg transition">
+                        <span class="material-icons-round">dashboard</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{{ url_for('courses.catalog') }}" class="flex items-center gap-2 hover:bg-white/10 px-4 py-2 rounded-lg transition">
+                        <span class="material-icons-round">school</span>
+                        <span>Courses</span>
+                    </a>
+                    <a href="{{ url_for('ranks.overview') }}" class="flex items-center gap-2 hover:bg-white/10 px-4 py-2 rounded-lg transition">
+                        <span class="material-icons-round">military_tech</span>
+                        <span>Rankings</span>
+                    </a>
+                    <a href="{{ url_for('content.opportunities') }}" class="flex items-center gap-2 hover:bg-white/10 px-4 py-2 rounded-lg transition">
+                        <span class="material-icons-round">work</span>
+                        <span>Opportunities</span>
+                    </a>
+                    
+                    <!-- User Dropdown -->
+                    <div x-data="{ open: false }" class="relative">
+                        <button @click="open = !open" class="flex items-center gap-2 hover:bg-white/10 px-4 py-2 rounded-lg transition">
+                            <span class="material-icons-round">account_circle</span>
+                            <span>{{ session.get('username') }}</span>
+                            <span class="material-icons-round text-sm">arrow_drop_down</span>
+                        </button>
+                        
+                        <div x-show="open" @click.away="open = false" 
+                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 text-gray-800"
+                             x-transition>
+                            <a href="{{ url_for('dashboard.profile') }}" class="block px-4 py-2 hover:bg-gray-100">
+                                <span class="material-icons-round text-sm align-middle">person</span>
+                                My Profile
+                            </a>
+                            <hr class="my-2">
+                            <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 hover:bg-gray-100 text-red-600">
+                                <span class="material-icons-round text-sm align-middle">logout</span>
+                                Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden">
+                    <span class="material-icons-round">menu</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mx-auto px-4 mt-4">
+                {% for category, message in messages %}
+                <div class="bg-{{ 'green' if category == 'success' else 'blue' if category == 'info' else 'red' }}-100 border-l-4 border-{{ 'green' if category == 'success' else 'blue' if category == 'info' else 'red' }}-500 text-{{ 'green' if category == 'success' else 'blue' if category == 'info' else 'red' }}-700 p-4 rounded shadow-md mb-4 flash-message">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <script>
+        // GSAP Flash Message Animation
+        gsap.from('.flash-message', {
+            duration: 0.5,
+            y: -50,
+            opacity: 0,
+            ease: 'bounce.out'
+        });
+        
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(() => {
+            gsap.to('.flash-message', {
+                duration: 0.5,
+                opacity: 0,
+                y: -20,
+                onComplete: () => {
+                    document.querySelectorAll('.flash-message').forEach(el => el.remove());
+                }
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
