@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block title %}Profile — LurniqHub{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+
+  <!-- Profile hero -->
+  <div class="card p-7 mb-6 animate-in relative overflow-hidden">
+    <div class="absolute right-0 top-0 w-64 h-64 opacity-5" style="background:radial-gradient(circle,#2E8EF7,transparent);transform:translate(30%,-30%)"></div>
+    <div class="relative z-10 flex flex-col sm:flex-row gap-6 items-start sm:items-center">
+      {# Safe username handling: ensure session username exists before indexing #}
+      {% set uname = session.get('username', '') %}
+      <div class="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-black text-white flex-shrink-0"
+           style="background:linear-gradient(135deg,#2E8EF7,#39D5C8)">
+        {{ (uname[:1] or '?')|upper }}
+      </div>
+      <div class="flex-1">
+  <h1 class="text-2xl font-black text-white mb-1">{{ uname }}</h1>
+        <div class="flex flex-wrap gap-2 items-center">
+          <div class="rank-badge flex items-center gap-1.5">
+            <span class="material-icons-round text-ocean-400" style="font-size:14px">{{ rank.icon }}</span>
+            {{ rank.name }} · Level {{ rank.level }}/8
+          </div>
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="text-3xl font-black text-amber-300" data-count="{{ nm }}">{{ nm }}</div>
+        <div class="text-sm text-slate-400">Nautical Miles</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+    {% for label, val, icon, color in [
+      ('Day Streak', stats.streak_days, 'local_fire_department', '#F5B83D'),
+      ('Total Logins', stats.total_logins, 'login', '#2E8EF7'),
+      ('Courses', stats.courses_enrolled, 'school', '#39D5C8'),
+      ('Lessons Done', stats.lessons_completed | length, 'menu_book', '#A78BFA'),
+    ] %}
+    <div class="card p-4 animate-in">
+      <span class="material-icons-round" style="color:{{ color }};font-size:22px">{{ icon }}</span>
+      <div class="text-2xl font-black text-white mt-2" data-count="{{ val }}">{{ val }}</div>
+      <div class="text-xs text-slate-500 mt-0.5">{{ label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Rank progress -->
+  <div class="card p-6 mb-6 animate-in">
+    <h2 class="text-lg font-bold text-white mb-5">Fleet Rank Journey</h2>
+
+    <!-- Horizontal rank track -->
+    <div class="relative">
+      <!-- Track line -->
+      <div class="absolute top-6 left-0 right-0 h-0.5" style="background:rgba(255,255,255,.08)"></div>
+      <div class="absolute top-6 left-0 h-0.5 transition-all duration-1000"
+           id="rank-progress-line"
+           style="background:linear-gradient(90deg,#2E8EF7,#39D5C8);width:0%"></div>
+
+      <!-- Rank nodes -->
+      <div class="flex justify-between relative">
+        {% for r in all_ranks %}
+        {% set is_done = stats.nautical_miles >= r.min_nm %}
+        {% set is_current = r.level == rank.level %}
+        <div class="flex flex-col items-center gap-2" style="max-width:80px">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center relative z-10 transition-all
+            {{ 'ring-2 ring-ocean-500 ring-offset-2 ring-offset-[#0F1629]' if is_current else '' }}"
+               style="{{ 'background:linear-gradient(135deg,#2E8EF7,#39D5C8)' if is_done else 'background:#141D33;border:2px solid rgba(255,255,255,.1)' }}">
+            <span class="material-icons-round" style="font-size:20px;color:{{ 'white' if is_done else '#374151' }}">{{ r.icon }}</span>
+          </div>
+          <div class="text-center">
+            <div class="text-xs font-semibold {{ 'text-white' if is_current else ('text-ocean-400' if is_done else 'text-slate-600') }}">{{ r.name }}</div>
+            <div class="text-xs {{ 'text-slate-500' if is_done else 'text-slate-700' }}">{{ r.min_nm }}NM</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if next_rank %}
+    <div class="mt-6">
+      <div class="flex justify-between text-xs text-slate-500 mb-2">
+        <span>Progress to {{ next_rank.name }}</span>
+        <span>{{ nm }} / {{ next_rank.min_nm }} NM ({{ rank_pct }}%)</span>
+      </div>
+      <div class="progress-bar h-2">
+        <div class="progress-fill" data-pct="{{ rank_pct }}" style="width:0%"></div>
+      </div>
+    </div>
+    {% else %}
+    <div class="mt-6 text-center text-sm text-wave-400 font-semibold">⭐ Maximum rank achieved — Fleet Admiral!</div>
+    {% endif %}
+  </div>
+
+  <!-- Enrolled courses -->
+  {% if enrolled_slugs %}
+  <div class="card p-6 animate-in">
+    <h2 class="text-lg font-bold text-white mb-4">Enrolled Courses</h2>
+    <div class="flex flex-wrap gap-2">
+      {% for slug in enrolled_slugs %}
+      <a href="{{ url_for('course_detail', slug=slug) }}"
+         class="btn-ghost px-4 py-2 text-sm flex items-center gap-2">
+        <span class="material-icons-round text-ocean-400" style="font-size:15px">school</span>
+        {{ slug | replace('-', ' ') | title }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+{% block scripts %}
+{# Safe numeric defaults for client-side JS calculations #}
+{% set total_ranks = (all_ranks|length) if all_ranks is defined else 1 %}
+{% set current_level = (rank.level) if rank is defined and rank.level is defined else 1 %}
+<script>
+  // Animate rank progress line
+  setTimeout(() => {
+    const totalRanks = {{ total_ranks }};
+    const currentLevel = {{ current_level }};
+    const denom = Math.max(1, totalRanks - 1);
+    const pct = Math.min(100, ((currentLevel - 1) / denom) * 100);
+    const line = document.getElementById('rank-progress-line');
+    if (line) line.style.width = pct + '%';
+  }, 300);
+  if (typeof gsap !== 'undefined' && gsap.utils && typeof gsap.to === 'function') {
+    if (typeof gsap !== 'undefined' && gsap.utils && gsap.to) {
+      gsap.utils.toArray('.animate-in').forEach((el, i) => {
+        gsap.to(el, { opacity:1, y:0, duration:.4, delay: i*0.07, ease:'power2.out' });
+      });
+    }
+  }
+</script>
+{% endblock %}
+{% endblock %}

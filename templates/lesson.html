@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }} — LurniqHub{% endblock %}
+
+{% block content %}
+<div class="flex h-[calc(100vh-60px)]" x-data="{sideOpen:true}">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <aside :class="sideOpen ? 'w-72' : 'w-0'"
+         class="flex-shrink-0 overflow-hidden transition-all duration-300 border-r border-white/5"
+         style="background:#0A0E1A">
+    <div class="w-72 h-full overflow-y-auto p-4">
+      <div class="mb-4">
+        <a href="{{ url_for('course_detail', slug=course.slug) }}"
+           class="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors mb-3">
+          <span class="material-icons-round" style="font-size:16px">arrow_back</span>{{ course.title }}
+        </a>
+        <div class="text-xs text-slate-600 uppercase tracking-widest">Lesson {{ lesson_index }} of {{ total_lessons }}</div>
+        <div class="progress-bar h-1 mt-2">
+          <div class="progress-fill" data-pct="{{ (lesson_index / total_lessons * 100) | round | int }}" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Module list -->
+      {% for m in course.modules %}
+      <div class="mb-3">
+        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider px-2 py-1.5 mb-1">{{ m.title }}</div>
+        {% for l in m.lessons %}
+        {% set lid = course.slug ~ '/' ~ m.id ~ '/' ~ l.id %}
+        {% set is_active = m.id == module.id and l.id == lesson.id %}
+        <a href="{{ url_for('lesson', slug=course.slug, mod_id=m.id, lesson_id=l.id) }}"
+           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all mb-0.5
+             {{ 'bg-ocean-500/15 border border-ocean-500/30 text-white' if is_active else 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+          <span class="material-icons-round flex-shrink-0" style="font-size:14px">
+            {{ 'radio_button_checked' if is_active else ('check_circle' if l.done else 'radio_button_unchecked') }}
+          </span>
+          <span class="truncate leading-snug">{{ l.title }}</span>
+          <span class="ml-auto text-xs text-slate-600 flex-shrink-0">{{ l.minutes }}m</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </aside>
+
+  <!-- ── Main content ──────────────────────────────────────────────────────── -->
+  <div class="flex-1 overflow-y-auto">
+
+    <!-- Top bar -->
+    <div class="sticky top-0 z-10 flex items-center gap-3 px-6 py-3 border-b border-white/5" style="background:#0A0E1A">
+      <button @click="sideOpen=!sideOpen" class="p-1.5 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-all">
+        <span class="material-icons-round" style="font-size:20px">menu</span>
+      </button>
+      <div class="flex items-center gap-1.5 text-xs text-slate-500">
+        <a href="{{ url_for('courses_catalog') }}" class="hover:text-white transition-colors">Courses</a>
+        <span class="material-icons-round" style="font-size:12px">chevron_right</span>
+        <a href="{{ url_for('course_detail', slug=course.slug) }}" class="hover:text-white transition-colors">{{ course.title }}</a>
+        <span class="material-icons-round" style="font-size:12px">chevron_right</span>
+        <span class="text-slate-300">{{ module.title }}</span>
+      </div>
+      <div class="ml-auto flex items-center gap-2">
+        {% if is_done %}
+        <span class="flex items-center gap-1.5 text-xs text-emerald-400 font-medium px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+          <span class="material-icons-round" style="font-size:14px">check_circle</span>Completed
+        </span>
+        {% else %}
+        <span class="text-xs text-amber-400/70 px-3 py-1.5 rounded-lg bg-amber-500/8 border border-amber-500/15">
+          +{{ nm_reward }} NM on completion
+        </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Lesson content -->
+    <div class="max-w-3xl mx-auto px-6 py-8">
+
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="flex items-center gap-2 text-xs text-slate-500 mb-3">
+          <span class="material-icons-round text-ocean-400" style="font-size:14px">{{ course.icon }}</span>
+          {{ module.title }}
+        </div>
+        <h1 class="text-3xl font-black text-white mb-3 leading-tight">{{ lesson.title }}</h1>
+        <div class="flex items-center gap-3 text-sm text-slate-400">
+          <span class="flex items-center gap-1.5"><span class="material-icons-round" style="font-size:15px">schedule</span>{{ lesson.minutes }} min read</span>
+        </div>
+      </div>
+
+      <!-- Intro -->
+      <div class="mb-8 p-5 rounded-2xl" style="background:linear-gradient(135deg,rgba(46,142,247,.08),rgba(57,213,200,.04));border:1px solid rgba(46,142,247,.15)">
+        <p class="text-slate-300 leading-relaxed text-base">{{ lesson.intro }}</p>
+      </div>
+
+      <!-- Sections -->
+      {% for sec in lesson.sections %}
+      <div class="mb-8">
+        <h2 class="text-xl font-bold text-white mb-3 flex items-center gap-2">
+          <span class="w-1 h-6 rounded-full bg-gradient-to-b from-ocean-500 to-wave-500 flex-shrink-0"></span>
+          {{ sec.heading }}
+        </h2>
+        <p class="text-slate-300 leading-relaxed text-base">{{ sec.body }}</p>
+      </div>
+      {% endfor %}
+
+      <!-- Key points -->
+      <div class="mb-8 card p-6">
+        <h3 class="text-sm font-bold text-ocean-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <span class="material-icons-round" style="font-size:16px">key</span>Key Points
+        </h3>
+        <ul class="space-y-3">
+          {% for pt in lesson.key_points %}
+          <li class="flex items-start gap-3 text-sm text-slate-300 leading-relaxed">
+            <span class="material-icons-round text-wave-400 flex-shrink-0 mt-0.5" style="font-size:16px">check_circle</span>
+            {{ pt }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <!-- ── Quiz ──────────────────────────────────────────────────────────── -->
+      {% set q = lesson.quiz %}
+      <div class="mb-8" x-data="{selected:null,submitted:false,correct:{{ q.answer }}}">
+        <div class="card p-6">
+          <div class="flex items-center gap-2 mb-5">
+            <div class="w-8 h-8 rounded-xl bg-amber-500/15 flex items-center justify-center">
+              <span class="material-icons-round text-amber-400" style="font-size:16px">quiz</span>
+            </div>
+            <h3 class="font-bold text-white">Knowledge Check</h3>
+          </div>
+
+          <p class="text-slate-200 font-medium mb-5 leading-relaxed">{{ q.question }}</p>
+
+          <div class="space-y-3 mb-6">
+            {% for opt in q.options %}
+            <label class="flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all border"
+                   :class="{
+                     'border-white/10 bg-white/3 hover:border-white/20 hover:bg-white/5': selected !== {{ loop.index0 }} && !submitted,
+                     'border-ocean-500/60 bg-ocean-500/10': selected === {{ loop.index0 }} && !submitted,
+                     'border-emerald-500/60 bg-emerald-500/10 text-emerald-300': submitted && {{ loop.index0 }} === correct,
+                     'border-red-500/40 bg-red-500/8 text-red-400': submitted && selected === {{ loop.index0 }} && {{ loop.index0 }} !== correct,
+                     'border-white/5 opacity-50': submitted && selected !== {{ loop.index0 }} && {{ loop.index0 }} !== correct,
+                   }"
+                   @click="!submitted && (selected = {{ loop.index0 }})">
+              <div class="w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all"
+                   :class="{
+                     'border-white/20': selected !== {{ loop.index0 }} && !submitted,
+                     'border-ocean-500 bg-ocean-500': selected === {{ loop.index0 }} && !submitted,
+                     'border-emerald-500 bg-emerald-500': submitted && {{ loop.index0 }} === correct,
+                     'border-red-500 bg-red-500': submitted && selected === {{ loop.index0 }} && {{ loop.index0 }} !== correct,
+                   }">
+                <span x-show="submitted && {{ loop.index0 }} === correct" class="material-icons-round text-white" style="font-size:12px">check</span>
+                <span x-show="submitted && selected === {{ loop.index0 }} && {{ loop.index0 }} !== correct" class="material-icons-round text-white" style="font-size:12px">close</span>
+              </div>
+              <span class="text-sm">{{ opt }}</span>
+            </label>
+            {% endfor %}
+          </div>
+
+          <div x-show="!submitted">
+            <button @click="submitted=true"
+                    :disabled="selected === null"
+                    :class="selected === null ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:opacity-90'"
+                    class="btn-primary px-6 py-2.5 text-sm">
+              Submit Answer
+            </button>
+          </div>
+
+          <!-- Explanation -->
+          <div x-show="submitted" x-transition class="mt-4 p-4 rounded-xl"
+               :class="selected === correct ? 'bg-emerald-500/10 border border-emerald-500/25' : 'bg-red-500/10 border border-red-500/25'">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="material-icons-round text-base" :class="selected === correct ? 'text-emerald-400' : 'text-red-400'">
+                <template x-if="selected === correct">check_circle</template>
+                <template x-if="selected !== correct">error</template>
+              </span>
+              <span class="font-semibold text-sm" :class="selected === correct ? 'text-emerald-300' : 'text-red-300'"
+                    x-text="selected === correct ? 'Correct!' : 'Not quite — see below'"></span>
+            </div>
+            <p class="text-sm text-slate-300 leading-relaxed">{{ q.explanation }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Complete button + nav -->
+      <div class="flex items-center justify-between gap-4 pt-4 border-t border-white/5 pb-8">
+        <!-- Prev -->
+        <div>
+          {% if prev_lesson %}
+          <a href="{{ url_for('lesson', slug=course.slug, mod_id=prev_lesson[0], lesson_id=prev_lesson[1]) }}"
+             class="btn-ghost px-4 py-2.5 text-sm flex items-center gap-2">
+            <span class="material-icons-round" style="font-size:16px">arrow_back</span>Previous
+          </a>
+          {% endif %}
+        </div>
+
+        <!-- Complete -->
+        {% if not is_done %}
+        <button id="complete-btn"
+                onclick="markComplete()"
+                class="btn-primary px-6 py-2.5 text-sm flex items-center gap-2">
+          <span class="material-icons-round" style="font-size:16px">check</span>Mark Complete (+{{ nm_reward }} NM)
+        </button>
+        {% else %}
+        <div class="flex items-center gap-2 text-sm text-emerald-400 font-medium">
+          <span class="material-icons-round" style="font-size:16px">check_circle</span>Lesson complete
+        </div>
+        {% endif %}
+
+        <!-- Next -->
+        <div>
+          {% if next_lesson %}
+          <a href="{{ url_for('lesson', slug=course.slug, mod_id=next_lesson[0], lesson_id=next_lesson[1]) }}"
+             class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2" id="next-btn">
+            Next<span class="material-icons-round" style="font-size:16px">arrow_forward</span>
+          </a>
+          {% else %}
+          <a href="{{ url_for('course_detail', slug=course.slug) }}"
+             class="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
+            Finish<span class="material-icons-round" style="font-size:16px">flag</span>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+async function markComplete() {
+  const btn = document.getElementById('complete-btn');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="material-icons-round animate-spin" style="font-size:16px">sync</span>';
+
+  try {
+    const res = await fetch('{{ url_for("complete_lesson", slug=course.slug, mod_id=module.id, lesson_id=lesson.id) }}', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      btn.outerHTML = '<div class="flex items-center gap-2 text-sm text-emerald-400 font-medium"><span class="material-icons-round" style="font-size:16px">check_circle</span>Lesson complete</div>';
+
+      // NM toast
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-8 right-8 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl text-white font-semibold shadow-2xl';
+      toast.style.cssText = 'background:linear-gradient(135deg,#2E8EF7,#39D5C8)';
+      toast.innerHTML = `<span class="material-icons-round" style="font-size:20px">anchor</span>+${data.awarded} NM earned!`;
+      document.body.appendChild(toast);
+      if (typeof gsap !== 'undefined' && gsap.from && gsap.to) {
+        gsap.from(toast, {y:20, opacity:0, duration:.4});
+        gsap.to(toast,  {y:-10, opacity:0, duration:.4, delay:2.5, onComplete:()=>toast.remove()});
+      } else {
+        setTimeout(()=>toast.remove(), 3000);
+      }
+
+      {% if next_lesson %}
+      // Highlight next button
+      const nb = document.getElementById('next-btn');
+      if (nb) { nb.classList.add('ring-2','ring-offset-2','ring-ocean-500'); }
+      {% endif %}
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Try again';
+  }
+}
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,154 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}LurniqHub{% endblock %}</title>
-    
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Tailwind Config -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#1976D2',
-                        secondary: '#0097A7',
-                        ocean: '#006994',
-                        wave: '#4ECDC4',
-                    }
-                }
-            }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}LurniqHub{% endblock %}</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy:  { 950:'#05080F', 900:'#0A0E1A', 800:'#0F1629', 700:'#141D33', 600:'#192340', 500:'#1E2D50' },
+            ocean: { 600:'#1565C0', 500:'#2E8EF7', 400:'#5BA7F9', 300:'#93C5FD' },
+            wave:  { 500:'#39D5C8', 400:'#5DDDD5', 300:'#99EDE8'  },
+            amber: { 500:'#F5B83D', 400:'#F8C960'  },
+          },
         }
-    </script>
-    
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    
-    <!-- GSAP -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    
-    <!-- Alpine.js (for interactivity) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
+      }
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    *{box-sizing:border-box}
+    :root{color-scheme:dark}
+    body{background:#0A0E1A;color:#E2E8F0;font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:#0F1629}
+    ::-webkit-scrollbar-thumb{background:#1E2D50;border-radius:3px}
+    ::-webkit-scrollbar-thumb:hover{background:#2E8EF7}
+    .glass{background:rgba(15,22,41,.75);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(46,142,247,.13)}
+    .glass-sm{background:rgba(20,29,51,.65);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.06)}
+    .text-gradient{background:linear-gradient(135deg,#2E8EF7,#39D5C8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .text-gradient-gold{background:linear-gradient(135deg,#F5B83D,#F87171);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .btn-primary{background:linear-gradient(135deg,#2E8EF7,#1565C0);color:#fff;font-weight:600;border-radius:.75rem;transition:all .2s;box-shadow:0 4px 20px rgba(46,142,247,.25)}
+    .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(46,142,247,.35)}
+    .btn-ghost{background:rgba(46,142,247,.08);color:#5BA7F9;border:1px solid rgba(46,142,247,.25);font-weight:500;border-radius:.75rem;transition:all .2s}
+    .btn-ghost:hover{background:rgba(46,142,247,.15);border-color:rgba(46,142,247,.4)}
+    .card{background:#0F1629;border:1px solid rgba(46,142,247,.1);border-radius:1rem;transition:border-color .2s,box-shadow .2s}
+    .card:hover{border-color:rgba(46,142,247,.25);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+    .card-glow{box-shadow:0 0 0 1px rgba(46,142,247,.2),0 8px 32px rgba(46,142,247,.08)}
+    .nav-link{position:relative;transition:color .15s}
+    .nav-link::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:2px;background:linear-gradient(90deg,#2E8EF7,#39D5C8);transform:scaleX(0);transition:transform .2s;border-radius:1px}
+    .nav-link:hover::after,.nav-link.active::after{transform:scaleX(1)}
+    .progress-bar{background:rgba(255,255,255,.06);border-radius:9999px;overflow:hidden}
+    .progress-fill{background:linear-gradient(90deg,#2E8EF7,#39D5C8);border-radius:9999px;height:100%;transition:width 1s cubic-bezier(.4,0,.2,1)}
+    .rank-badge{background:linear-gradient(135deg,rgba(46,142,247,.15),rgba(57,213,200,.08));border:1px solid rgba(46,142,247,.3);border-radius:.625rem;padding:.25rem .75rem;font-size:.75rem;font-weight:600;color:#93C5FD}
+    .animate-in{opacity:0;transform:translateY(16px)}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .fade-up{animation:fadeUp .5s ease forwards}
+    @keyframes pulse-ring{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.04)}}
+    .pulse{animation:pulse-ring 2.5s ease-in-out infinite}
+  </style>
+
+  {% block head %}{% endblock %}
 </head>
-<body class="bg-gray-50">
-    
-    {% if session.get('user_id') %}
-    <!-- Navigation -->
-    <nav class="bg-gradient-to-r from-primary to-ocean text-white shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <!-- Logo -->
-                <a href="{{ url_for('dashboard.home') }}" class="flex items-center gap-2 text-2xl font-bold">
-                    <span class="material-icons-round text-4xl">sailing</span>
-                    <span>LurniqHub</span>
-                </a>
-                
-                <!-- Desktop Menu -->
-                <div class="hidden md:flex items-center gap-6">
-                    <a href="{{ url_for('dashboard.home') }}" class="flex items-center gap-2 hover:bg-white/10 px-4 py-2 rounded-lg transition">
-                        <span class="material-icons-round">dashboard</span>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="{{ url_for('courses.catalog') }}" class="flex items-center gap-2 hover:bg-white/10 px-4 py-2 rounded-lg transition">
-                        <span class="material-icons-round">school</span>
-                        <span>Courses</span>
-                    </a>
-                    <a href="{{ url_for('ranks.overview') }}" class="flex items-center gap-2 hover:bg-white/10 px-4 py-2 rounded-lg transition">
-                        <span class="material-icons-round">military_tech</span>
-                        <span>Rankings</span>
-                    </a>
-                    <a href="{{ url_for('content.opportunities') }}" class="flex items-center gap-2 hover:bg-white/10 px-4 py-2 rounded-lg transition">
-                        <span class="material-icons-round">work</span>
-                        <span>Opportunities</span>
-                    </a>
-                    
-                    <!-- User Dropdown -->
-                    <div x-data="{ open: false }" class="relative">
-                        <button @click="open = !open" class="flex items-center gap-2 hover:bg-white/10 px-4 py-2 rounded-lg transition">
-                            <span class="material-icons-round">account_circle</span>
-                            <span>{{ session.get('username') }}</span>
-                            <span class="material-icons-round text-sm">arrow_drop_down</span>
-                        </button>
-                        
-                        <div x-show="open" @click.away="open = false" 
-                             class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 text-gray-800"
-                             x-transition>
-                            <a href="{{ url_for('dashboard.profile') }}" class="block px-4 py-2 hover:bg-gray-100">
-                                <span class="material-icons-round text-sm align-middle">person</span>
-                                My Profile
-                            </a>
-                            <hr class="my-2">
-                            <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 hover:bg-gray-100 text-red-600">
-                                <span class="material-icons-round text-sm align-middle">logout</span>
-                                Logout
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Mobile Menu Button -->
-                <button class="md:hidden">
-                    <span class="material-icons-round">menu</span>
-                </button>
-            </div>
+<body class="min-h-screen">
+
+{% if session.get('user_id') %}
+<!-- ═══ Navigation ═══════════════════════════════════════════════════════════ -->
+<nav class="glass sticky top-0 z-50 border-b border-white/5" x-data="{mob:false}">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6">
+    <div class="flex items-center justify-between h-[60px]">
+
+      <!-- Logo -->
+      <a href="{{ url_for('dashboard') }}" class="flex items-center gap-2.5 group flex-shrink-0">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-ocean-500 to-wave-500 flex items-center justify-center shadow-lg">
+          <span class="material-icons-round text-white" style="font-size:16px">sailing</span>
         </div>
-    </nav>
-    {% endif %}
-    
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="container mx-auto px-4 mt-4">
-                {% for category, message in messages %}
-                <div class="bg-{{ 'green' if category == 'success' else 'blue' if category == 'info' else 'red' }}-100 border-l-4 border-{{ 'green' if category == 'success' else 'blue' if category == 'info' else 'red' }}-500 text-{{ 'green' if category == 'success' else 'blue' if category == 'info' else 'red' }}-700 p-4 rounded shadow-md mb-4 flash-message">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            </div>
+        <span class="font-bold text-lg text-white group-hover:text-gradient transition-all hidden sm:block">LurniqHub</span>
+      </a>
+
+      <!-- Desktop links -->
+      <div class="hidden md:flex items-center gap-0.5">
+        {% set ep = request.endpoint %}
+        <a href="{{ url_for('dashboard') }}"
+           class="nav-link {{ 'active text-white' if ep == 'dashboard' else 'text-slate-400 hover:text-white' }} flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium hover:bg-white/5 transition-all">
+          <span class="material-icons-round" style="font-size:17px">dashboard</span>Dashboard
+        </a>
+        <a href="{{ url_for('courses_catalog') }}"
+           class="nav-link {{ 'active text-white' if 'course' in (ep or '') else 'text-slate-400 hover:text-white' }} flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium hover:bg-white/5 transition-all">
+          <span class="material-icons-round" style="font-size:17px">school</span>Courses
+        </a>
+        <a href="{{ url_for('leaderboard') }}"
+           class="nav-link {{ 'active text-white' if ep == 'leaderboard' else 'text-slate-400 hover:text-white' }} flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium hover:bg-white/5 transition-all">
+          <span class="material-icons-round" style="font-size:17px">military_tech</span>Rankings
+        </a>
+        <a href="{{ url_for('opportunities') }}"
+           class="nav-link {{ 'active text-white' if ep == 'opportunities' else 'text-slate-400 hover:text-white' }} flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium hover:bg-white/5 transition-all">
+          <span class="material-icons-round" style="font-size:17px">work</span>Careers
+        </a>
+      </div>
+
+      <!-- Right cluster -->
+      <div class="flex items-center gap-2">
+        <!-- NM pill -->
+        {% if nav_nm is not none %}
+        <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+          <span class="material-icons-round text-amber-400" style="font-size:14px">anchor</span>
+          <span class="text-amber-300 text-sm font-semibold">{{ nav_nm | int }}</span>
+          <span class="text-amber-500/50 text-xs">NM</span>
+        </div>
         {% endif %}
-    {% endwith %}
-    
-    <!-- Main Content -->
-    <main>
-        {% block content %}{% endblock %}
-    </main>
-    
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
-    <script>
-        // GSAP Flash Message Animation
-        gsap.from('.flash-message', {
-            duration: 0.5,
-            y: -50,
-            opacity: 0,
-            ease: 'bounce.out'
-        });
-        
-        // Auto-hide flash messages after 5 seconds
-        setTimeout(() => {
-            gsap.to('.flash-message', {
-                duration: 0.5,
-                opacity: 0,
-                y: -20,
-                onComplete: () => {
-                    document.querySelectorAll('.flash-message').forEach(el => el.remove());
-                }
-            });
-        }, 5000);
-    </script>
+
+        <!-- Profile dropdown -->
+        <div x-data="{open:false}" class="relative">
+          <button @click="open=!open"
+                  class="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-ocean-500 to-wave-500 flex items-center justify-center text-xs font-bold text-white select-none">
+              {{ session.get('username','?')[0].upper() }}
+            </div>
+            <span class="hidden sm:block text-sm font-medium text-slate-200 max-w-[90px] truncate">{{ session.get('username') }}</span>
+            <span class="material-icons-round text-slate-400" style="font-size:16px">expand_more</span>
+          </button>
+          <div x-show="open" @click.away="open=false" x-transition
+               class="absolute right-0 mt-2 w-52 glass-sm rounded-xl py-2 shadow-2xl z-50">
+            <a href="{{ url_for('profile') }}"
+               class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-all">
+              <span class="material-icons-round text-ocean-400" style="font-size:16px">person</span>My Profile
+            </a>
+            <div class="border-t border-white/8 my-1.5"></div>
+            <a href="{{ url_for('logout') }}"
+               class="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-white/5 transition-all">
+              <span class="material-icons-round" style="font-size:16px">logout</span>Log out
+            </a>
+          </div>
+        </div>
+
+        <!-- Mobile menu toggle -->
+        <button @click="mob=!mob" class="md:hidden p-2 rounded-lg hover:bg-white/5 text-slate-400">
+          <span class="material-icons-round" style="font-size:20px">menu</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile nav -->
+  <div x-show="mob" x-transition class="md:hidden border-t border-white/5 px-4 py-3 space-y-0.5">
+    <a href="{{ url_for('dashboard') }}"    class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-white/5 hover:text-white"><span class="material-icons-round" style="font-size:16px">dashboard</span>Dashboard</a>
+    <a href="{{ url_for('courses_catalog') }}" class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-white/5 hover:text-white"><span class="material-icons-round" style="font-size:16px">school</span>Courses</a>
+    <a href="{{ url_for('leaderboard') }}"  class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-white/5 hover:text-white"><span class="material-icons-round" style="font-size:16px">military_tech</span>Rankings</a>
+    <a href="{{ url_for('opportunities') }}"  class="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-white/5 hover:text-white"><span class="material-icons-round" style="font-size:16px">work</span>Careers</a>
+  </div>
+</nav>
+{% endif %}
+
+<!-- ═══ Flash messages ════════════════════════════════════════════════════════ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="fixed top-[72px] right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+    {% for cat, msg in messages %}
+    <div class="flash-msg flex items-start gap-3 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-xl pointer-events-auto
+      {% if cat == 'success' %}bg-emerald-950/90 border border-emerald-500/30 text-emerald-200
+      {% elif cat == 'danger' %}bg-red-950/90 border border-red-500/30 text-red-200
+      {% elif cat == 'warning' %}bg-amber-950/90 border border-amber-500/30 text-amber-200
+      {% else %}bg-sky-950/90 border border-sky-500/30 text-sky-200{% endif %}">
+      <span class="material-icons-round text-base mt-0.5 flex-shrink-0
+        {% if cat == 'success' %}text-emerald-400{% elif cat == 'danger' %}text-red-400{% elif cat == 'warning' %}text-amber-400{% else %}text-sky-400{% endif %}">
+        {% if cat == 'success' %}check_circle{% elif cat == 'danger' %}error{% elif cat == 'warning' %}warning{% else %}info{% endif %}
+      </span>
+      <p class="text-sm flex-1 leading-snug">{{ msg }}</p>
+      <button onclick="this.closest('.flash-msg').remove()" class="text-white/30 hover:text-white/70 ml-1 flex-shrink-0">
+        <span class="material-icons-round" style="font-size:15px">close</span>
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<!-- ═══ Main content ══════════════════════════════════════════════════════════ -->
+<main>{% block content %}{% endblock %}</main>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+  // Auto-dismiss flashes
+  setTimeout(() => {
+    document.querySelectorAll('.flash-msg').forEach(el => {
+      if (typeof gsap !== 'undefined' && gsap.to) {
+        gsap.to(el, {opacity:0, x:16, duration:.35, onComplete:()=>el.remove()});
+      } else {
+        el.remove();
+      }
+    });
+  }, 5000);
+</script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

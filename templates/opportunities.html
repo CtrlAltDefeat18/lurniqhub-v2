@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Maritime Careers — LurniqHub{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+
+  <!-- Header -->
+  <div class="mb-10">
+    <h1 class="text-3xl font-black text-white mb-2">Maritime Career Pathways</h1>
+    <p class="text-slate-400 text-base max-w-2xl">South Africa's blue economy is growing fast — here are the doors your LurniqHub education can open, with real institutions, real pathways and real jobs.</p>
+  </div>
+
+  {% for section in sections %}
+  <div class="mb-12">
+    <!-- Section header -->
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:{{ section.accent }}22;border:1px solid {{ section.accent }}44">
+        <span class="material-icons-round" style="color:{{ section.accent }};font-size:20px">{{ section.icon }}</span>
+      </div>
+      <h2 class="text-xl font-bold text-white">{{ section.category }}</h2>
+      <div class="flex-1 h-px ml-2" style="background:linear-gradient(90deg,{{ section.accent }}33,transparent)"></div>
+    </div>
+
+    <!-- Cards grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for item in section.items %}
+      <div class="card p-5 hover:border-ocean-500/25 animate-in flex flex-col gap-3">
+        <div class="flex items-start justify-between gap-3">
+          <h3 class="font-semibold text-white text-base leading-snug">{{ item.title }}</h3>
+          <span class="text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0"
+                style="background:{{ section.accent }}18;color:{{ section.accent }}">{{ item.tag }}</span>
+        </div>
+        <p class="text-sm text-slate-400 leading-relaxed flex-1">{{ item.body }}</p>
+        <div class="flex items-center gap-1.5 text-xs mt-1" style="color:{{ section.accent }}99">
+          <span class="material-icons-round" style="font-size:13px">arrow_forward</span>
+          <span>Explore this pathway</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- CTA banner -->
+  <div class="relative overflow-hidden rounded-2xl p-8 text-center" style="background:linear-gradient(135deg,#0D1B3E,#061528);border:1px solid rgba(46,142,247,.2)">
+    <div class="absolute inset-0 opacity-10" style="background:radial-gradient(circle at 50% 50%,#2E8EF7,transparent 60%)"></div>
+    <div class="relative z-10">
+      <h2 class="text-2xl font-black text-white mb-3">Start building your maritime career today.</h2>
+      <p class="text-slate-400 mb-6 max-w-lg mx-auto text-sm">Every NM you earn brings you closer to the qualifications, skills and network you need.</p>
+      <a href="{{ url_for('courses_catalog') }}" class="btn-primary px-8 py-3.5 text-base inline-flex items-center gap-2">
+        <span class="material-icons-round">school</span>Browse Courses
+      </a>
+    </div>
+  </div>
+
+</div>
+
+{% block scripts %}
+<script>
+  if (typeof gsap !== 'undefined' && gsap.utils && gsap.to) {
+    gsap.utils.toArray('.animate-in').forEach((el, i) => {
+      gsap.to(el, { opacity:1, y:0, duration:.4, delay: i*0.04, ease:'power2.out' });
+    });
+  }
+</script>
+{% endblock %}
+{% endblock %}

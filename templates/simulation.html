@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}{{ sim.title }} — LurniqHub{% endblock %}
+
+{% block head %}
+<style>
+  #sim-canvas { display:block; width:100%; height:100%; image-rendering:crisp-edges; cursor:crosshair; }
+  .hud-panel { background:rgba(10,14,26,.85); backdrop-filter:blur(12px); border:1px solid rgba(46,142,247,.2); border-radius:.75rem; }
+  .ctrl-btn { background:rgba(30,45,80,.7); border:1px solid rgba(46,142,247,.3); color:#93C5FD; border-radius:.625rem; font-size:.75rem; font-weight:600; padding:.5rem .75rem; cursor:pointer; user-select:none; -webkit-user-select:none; transition:background .15s; }
+  .ctrl-btn:active { background:rgba(46,142,247,.25); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-[calc(100vh-60px)]">
+
+  <!-- ── Top strip ──────────────────────────────────────────────────────────── -->
+  <div class="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-white/5" style="background:#0A0E1A">
+    <div class="flex items-center gap-3">
+      <a href="{{ url_for('course_detail', slug=course.slug) }}"
+         class="btn-ghost px-3 py-1.5 text-xs flex items-center gap-1.5">
+        <span class="material-icons-round" style="font-size:15px">arrow_back</span>Course
+      </a>
+      <div>
+        <div class="text-xs text-slate-500">Bridge Simulation</div>
+        <div class="font-semibold text-white text-sm">{{ sim.title }}</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-4 text-xs text-slate-400">
+      <span>Pass: {{ pass_score }}%</span>
+      <span class="text-amber-300">Up to {{ max_nm }} NM</span>
+      {% if sim_done %}<span class="text-emerald-400 font-medium flex items-center gap-1"><span class="material-icons-round" style="font-size:13px">check_circle</span>Previously passed</span>{% endif %}
+    </div>
+  </div>
+
+  <!-- ── Canvas area ───────────────────────────────────────────────────────── -->
+  <div class="flex-1 relative overflow-hidden" style="background:#061020">
+    <canvas id="sim-canvas"></canvas>
+
+    <!-- Start overlay -->
+    <div id="start-overlay"
+         class="absolute inset-0 flex flex-col items-center justify-center text-center px-6"
+         style="background:rgba(5,8,15,.92);backdrop-filter:blur(6px)">
+      <div class="max-w-lg">
+        <div class="w-16 h-16 rounded-2xl mx-auto mb-5 flex items-center justify-center"
+             style="background:linear-gradient(135deg,#2E8EF7,#39D5C8)">
+          <span class="material-icons-round text-white" style="font-size:32px">sailing</span>
+        </div>
+        <h2 class="text-3xl font-black text-white mb-4">{{ sim.title }}</h2>
+        <p class="text-slate-300 leading-relaxed mb-8 text-sm">{{ sim.briefing }}</p>
+
+        <div class="grid grid-cols-2 gap-3 mb-8 text-xs">
+          <div class="hud-panel p-3 text-left">
+            <div class="text-slate-500 mb-1">Pass score</div>
+            <div class="text-white font-bold text-base">{{ pass_score }}%</div>
+          </div>
+          <div class="hud-panel p-3 text-left">
+            <div class="text-slate-500 mb-1">Max reward</div>
+            <div class="text-amber-300 font-bold text-base">{{ max_nm }} NM</div>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3 justify-center mb-6">
+          <div class="text-xs text-slate-400 flex items-center gap-1.5 bg-white/5 px-3 py-2 rounded-lg">
+            <span class="font-bold text-white">← →</span> or <span class="font-bold text-white">A D</span> — steer
+          </div>
+          <div class="text-xs text-slate-400 flex items-center gap-1.5 bg-white/5 px-3 py-2 rounded-lg">
+            <span class="font-bold text-white">↑ ↓</span> or <span class="font-bold text-white">W S</span> — throttle
+          </div>
+        </div>
+
+        <button id="start-btn" onclick="startSim()"
+                class="btn-primary px-8 py-3.5 text-base font-semibold flex items-center gap-3 mx-auto">
+          <span class="material-icons-round" style="font-size:20px">play_arrow</span>Take the Helm
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile controls -->
+    <div id="touch-controls"
+         class="absolute bottom-4 left-1/2 -translate-x-1/2 hidden sm:hidden flex-col items-center gap-2"
+         style="display:none">
+      <div class="ctrl-btn px-5 py-2 text-center"
+           ontouchstart="sim.pressKey('ArrowUp')" ontouchend="sim.releaseKey('ArrowUp')">▲ Ahead</div>
+      <div class="flex gap-3">
+        <div class="ctrl-btn px-5 py-2"
+             ontouchstart="sim.pressKey('ArrowLeft')" ontouchend="sim.releaseKey('ArrowLeft')">◄ Port</div>
+        <div class="ctrl-btn px-5 py-2"
+             ontouchstart="sim.pressKey('ArrowDown')" ontouchend="sim.releaseKey('ArrowDown')">▼ Astern</div>
+        <div class="ctrl-btn px-5 py-2"
+             ontouchstart="sim.pressKey('ArrowRight')" ontouchend="sim.releaseKey('ArrowRight')">Stbd ►</div>
+      </div>
+    </div>
+
+    <!-- Result overlay -->
+    <div id="result-overlay"
+         class="absolute inset-0 flex flex-col items-center justify-center text-center px-6 hidden"
+         style="background:rgba(5,8,15,.92);backdrop-filter:blur(8px)">
+      <div class="max-w-md w-full">
+        <div id="result-icon" class="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center text-4xl"></div>
+        <h2 id="result-title" class="text-3xl font-black mb-2"></h2>
+        <p id="result-sub" class="text-slate-400 mb-7 text-sm"></p>
+
+        <div class="grid grid-cols-3 gap-3 mb-6">
+          <div class="hud-panel p-3">
+            <div class="text-slate-500 text-xs mb-1">Score</div>
+            <div id="res-score" class="text-white font-black text-2xl"></div>
+          </div>
+          <div class="hud-panel p-3">
+            <div class="text-slate-500 text-xs mb-1">WP Hit</div>
+            <div id="res-wp" class="text-white font-black text-2xl"></div>
+          </div>
+          <div class="hud-panel p-3">
+            <div class="text-slate-500 text-xs mb-1">NM Earned</div>
+            <div id="res-nm" class="text-amber-300 font-black text-2xl"></div>
+          </div>
+        </div>
+
+        <div class="flex gap-3 justify-center">
+          <button onclick="retrySim()"
+                  class="btn-ghost px-5 py-2.5 text-sm flex items-center gap-2">
+            <span class="material-icons-round" style="font-size:16px">refresh</span>Try Again
+          </button>
+          <a href="{{ url_for('course_detail', slug=course.slug) }}"
+             class="btn-primary px-5 py-2.5 text-sm flex items-center gap-2">
+            <span class="material-icons-round" style="font-size:16px">arrow_forward</span>Back to Course
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+const SIM_CONFIG  = {{ sim_config_json | safe }};
+const SIM_SLUG    = {{ course.slug | tojson }};
+const PASS_SCORE  = {{ pass_score }};
+const SUBMIT_URL  = {{ url_for('submit_simulation', slug=course.slug) | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/simulator.js') }}"></script>
+<script>
+let sim = null;
+
+function resizeCanvas() {
+  const canvas = document.getElementById('sim-canvas');
+  const container = canvas.parentElement;
+  canvas.width  = container.clientWidth;
+  canvas.height = container.clientHeight;
+  if (sim) { sim.scaleX = canvas.width / SIM_CONFIG.world.w; sim.scaleY = canvas.height / SIM_CONFIG.world.h; }
+}
+
+function startSim() {
+  document.getElementById('start-overlay').style.display = 'none';
+  resizeCanvas();
+  const canvas = document.getElementById('sim-canvas');
+
+  // Show touch controls on small screens
+  if (window.innerWidth < 640) {
+    const tc = document.getElementById('touch-controls');
+    if (tc) tc.style.display = 'flex';
+  }
+
+  sim = new HelmSimulator(canvas, SIM_CONFIG, onSimEnd);
+  sim.start();
+}
+
+async function onSimEnd(result) {
+  // POST result
+  let awarded = 0;
+  try {
+    const r = await fetch(SUBMIT_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ score: result.score, time_taken: result.time_taken }),
+    });
+    const d = await r.json();
+    if (d.ok) awarded = d.awarded;
+  } catch(e) {}
+
+  // Show overlay
+  const passed = result.score >= PASS_SCORE;
+  const icon = document.getElementById('result-icon');
+  const title = document.getElementById('result-title');
+  const sub = document.getElementById('result-sub');
+  const ov = document.getElementById('result-overlay');
+
+  icon.style.background = passed ? 'linear-gradient(135deg,#22C55E,#16A34A)' : 'linear-gradient(135deg,#EF4444,#DC2626)';
+  icon.textContent = passed ? '🏆' : '⚓';
+  title.textContent = passed ? 'Mission Complete!' : 'Mission Incomplete';
+  title.style.color = passed ? '#4ADE80' : '#F87171';
+  sub.textContent = passed
+    ? `Score: ${result.score}% — ${result.wp_hit}/${result.total_wp} waypoints hit in ${result.time_taken}s.`
+    : `Reached ${result.wp_hit} of ${result.total_wp} waypoints. You need ${PASS_SCORE}% to pass.`;
+  document.getElementById('res-score').textContent = result.score + '%';
+  document.getElementById('res-wp').textContent = result.wp_hit + '/' + result.total_wp;
+  document.getElementById('res-nm').textContent = awarded > 0 ? '+' + awarded : (passed ? '✓' : '—');
+
+  ov.classList.remove('hidden');
+  if (typeof gsap !== 'undefined' && gsap.from) gsap.from(ov.querySelector('.max-w-md'), {y:30, opacity:0, duration:.6, ease:'power3.out'});
+}
+
+function retrySim() {
+  if (sim) sim.destroy();
+  sim = null;
+  document.getElementById('result-overlay').classList.add('hidden');
+  document.getElementById('start-overlay').style.display = 'flex';
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+</script>
+{% endblock %}
+{% endblock %}

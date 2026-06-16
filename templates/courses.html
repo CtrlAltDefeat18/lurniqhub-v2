@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Course Catalog — LurniqHub{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-black text-white mb-2">Course Catalog</h1>
+    <p class="text-slate-400">Choose your course. Earn Nautical Miles. Climb the leaderboard.</p>
+  </div>
+
+  <!-- Category filter -->
+  <div class="mb-6" x-data="{active:'All'}">
+    <div class="flex flex-wrap gap-2 mb-8">
+      <button @click="active='All'"
+              :class="active==='All' ? 'bg-ocean-500 text-white border-ocean-500' : 'bg-transparent text-slate-400 border-white/10 hover:border-white/25 hover:text-white'"
+              class="px-4 py-1.5 rounded-full text-sm font-medium border transition-all">All Courses</button>
+      {% for cat in categories %}
+      <button @click="active='{{ cat }}'"
+              :class="active==='{{ cat }}' ? 'bg-ocean-500 text-white border-ocean-500' : 'bg-transparent text-slate-400 border-white/10 hover:border-white/25 hover:text-white'"
+              class="px-4 py-1.5 rounded-full text-sm font-medium border transition-all">{{ cat }}</button>
+      {% endfor %}
+    </div>
+
+    <!-- Cards grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      {% for c in catalog %}
+      <div x-show="active==='All' || active==='{{ c.category }}'"
+           x-transition
+           class="card group flex flex-col hover:border-ocean-500/30 animate-in">
+
+        <!-- Gradient bar + icon -->
+        <div class="relative h-24 rounded-t-xl overflow-hidden flex items-end p-5"
+             style="background:linear-gradient(135deg,{{ c.theme.from }},{{ c.theme.to }})">
+          <div class="absolute inset-0 opacity-30" style="background-image:radial-gradient(circle at 70% 50%,rgba(255,255,255,.15),transparent 60%)"></div>
+          <span class="material-icons-round text-white relative z-10" style="font-size:36px">{{ c.icon }}</span>
+          <div class="ml-auto relative z-10 flex flex-col items-end gap-1">
+            <span class="text-xs font-bold text-white/90 bg-black/20 px-2 py-0.5 rounded-full">{{ c.difficulty }}</span>
+            {% if c.has_simulation %}
+            <span class="text-xs text-white/80 bg-black/20 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span class="material-icons-round" style="font-size:11px">gamepad</span>Simulation
+            </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-5 flex flex-col flex-1">
+          <div class="flex items-start justify-between gap-2 mb-1">
+            <h3 class="font-bold text-white text-base leading-snug group-hover:text-ocean-300 transition-colors">{{ c.title }}</h3>
+          </div>
+          <p class="text-xs text-slate-400 mb-3 leading-relaxed">{{ c.tagline }}</p>
+
+          <!-- Meta row -->
+          <div class="flex flex-wrap gap-2 mb-4 text-xs">
+            <span class="px-2 py-1 rounded-md text-slate-300" style="background:rgba(255,255,255,.06)">
+              <span class="material-icons-round align-middle mr-0.5" style="font-size:11px">school</span>{{ c.grade_level }}
+            </span>
+            <span class="px-2 py-1 rounded-md text-slate-300" style="background:rgba(255,255,255,.06)">
+              <span class="material-icons-round align-middle mr-0.5" style="font-size:11px">menu_book</span>{{ c.lesson_count }} lessons
+            </span>
+            <span class="px-2 py-1 rounded-md text-amber-300" style="background:rgba(245,184,61,.1)">
+              <span class="material-icons-round align-middle mr-0.5" style="font-size:11px">anchor</span>{{ c.lesson_count * 15 + 35 }}+ NM
+            </span>
+          </div>
+
+          <!-- Progress bar for enrolled -->
+          {% if c.is_enrolled %}
+          <div class="mb-4">
+            <div class="flex justify-between text-xs text-slate-500 mb-1.5">
+              <span>Progress</span><span>{{ c.progress }}%</span>
+            </div>
+            <div class="progress-bar h-2">
+              <div class="progress-fill" data-pct="{{ c.progress }}" style="width:0%"></div>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- CTA -->
+          <div class="mt-auto">
+            {% if c.is_enrolled %}
+            <a href="{{ url_for('course_detail', slug=c.slug) }}"
+               class="btn-ghost w-full py-2.5 text-sm font-medium flex items-center justify-center gap-2 text-center">
+              <span class="material-icons-round" style="font-size:16px">play_arrow</span>
+              {% if c.progress == 100 %}Review Course{% else %}Continue{% endif %}
+            </a>
+            {% else %}
+            <a href="{{ url_for('course_detail', slug=c.slug) }}"
+               class="btn-primary w-full py-2.5 text-sm flex items-center justify-center gap-2 text-center">
+              <span class="material-icons-round" style="font-size:16px">rocket_launch</span>View Course
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+{% block scripts %}
+<script>
+  if (typeof gsap !== 'undefined' && gsap.utils && gsap.to) {
+    gsap.utils.toArray('.animate-in').forEach((el, i) => {
+      gsap.to(el, { opacity:1, y:0, duration:.4, delay: i*0.05, ease:'power2.out' });
+    });
+  }
+</script>
+{% endblock %}
+{% endblock %}

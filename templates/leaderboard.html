@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard — LurniqHub{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-black text-white mb-2">Global Leaderboard</h1>
+    <p class="text-slate-400">The top navigators of the LurniqHub fleet.</p>
+  </div>
+
+  {% if board %}
+  <!-- ── Podium (top 3) ─────────────────────────────────────────────────────── -->
+  {% if board | length >= 3 %}
+  <div class="grid grid-cols-3 gap-4 mb-8 items-end">
+
+    <!-- 2nd -->
+    <div class="card p-5 text-center animate-in {{ 'ring-1 ring-ocean-500/40' if board[1].is_current }}">
+      <div class="text-4xl mb-2">🥈</div>
+      <div class="w-12 h-12 rounded-full bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center text-xl font-bold text-white mx-auto mb-3">
+        {{ board[1].username[0].upper() }}
+      </div>
+      <div class="font-bold text-white truncate {{ 'text-ocean-300' if board[1].is_current }}">{{ board[1].username }}</div>
+      <div class="text-xs text-slate-500 mb-2">{{ board[1].rank_name }}</div>
+      <div class="text-lg font-black text-amber-300">{{ board[1].nautical_miles }} <span class="text-xs font-normal text-slate-500">NM</span></div>
+    </div>
+
+    <!-- 1st (taller) -->
+    <div class="card p-6 text-center -mt-4 animate-in {{ 'ring-1 ring-ocean-500/40' if board[0].is_current }}" style="border-color:rgba(245,184,61,.25);background:linear-gradient(180deg,rgba(245,184,61,.06),#0F1629)">
+      <div class="text-5xl mb-2">🏆</div>
+      <div class="w-14 h-14 rounded-full flex items-center justify-center text-2xl font-bold text-white mx-auto mb-3"
+           style="background:linear-gradient(135deg,#F5B83D,#E58C00)">
+        {{ board[0].username[0].upper() }}
+      </div>
+      <div class="font-bold text-white text-lg truncate {{ 'text-ocean-300' if board[0].is_current }}">{{ board[0].username }}</div>
+      <div class="text-xs text-slate-400 mb-2">{{ board[0].rank_name }}</div>
+      <div class="text-2xl font-black text-amber-300">{{ board[0].nautical_miles }} <span class="text-sm font-normal text-slate-500">NM</span></div>
+    </div>
+
+    <!-- 3rd -->
+    <div class="card p-5 text-center animate-in {{ 'ring-1 ring-ocean-500/40' if board[2].is_current }}">
+      <div class="text-4xl mb-2">🥉</div>
+      <div class="w-12 h-12 rounded-full bg-gradient-to-br from-orange-600 to-orange-800 flex items-center justify-center text-xl font-bold text-white mx-auto mb-3">
+        {{ board[2].username[0].upper() }}
+      </div>
+      <div class="font-bold text-white truncate {{ 'text-ocean-300' if board[2].is_current }}">{{ board[2].username }}</div>
+      <div class="text-xs text-slate-500 mb-2">{{ board[2].rank_name }}</div>
+      <div class="text-lg font-black text-amber-300">{{ board[2].nautical_miles }} <span class="text-xs font-normal text-slate-500">NM</span></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Full table ─────────────────────────────────────────────────────────── -->
+  <div class="card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr style="background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06)">
+            <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-5 py-3 w-14">#</th>
+            <th class="text-left text-xs font-semibold text-slate-500 uppercase tracking-wider px-5 py-3">Navigator</th>
+            <th class="text-right text-xs font-semibold text-slate-500 uppercase tracking-wider px-5 py-3">NM</th>
+            <th class="text-right text-xs font-semibold text-slate-500 uppercase tracking-wider px-5 py-3 hidden sm:table-cell">Courses</th>
+            <th class="text-right text-xs font-semibold text-slate-500 uppercase tracking-wider px-5 py-3 hidden sm:table-cell">Streak</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in board %}
+          <tr class="border-b border-white/4 transition-colors hover:bg-white/2
+            {{ 'bg-ocean-500/6' if entry.is_current }}"
+              id="{{ 'my-row' if entry.is_current }}">
+            <!-- Position -->
+            <td class="px-5 py-3.5">
+              <div class="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-bold
+                {% if entry.rank_pos == 1 %}text-amber-300 bg-amber-500/15
+                {% elif entry.rank_pos == 2 %}text-slate-300 bg-slate-500/20
+                {% elif entry.rank_pos == 3 %}text-orange-400 bg-orange-600/15
+                {% else %}text-slate-500 bg-white/5{% endif %}">
+                {{ entry.rank_pos }}
+              </div>
+            </td>
+
+            <!-- User -->
+            <td class="px-5 py-3.5">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+                     style="background:linear-gradient(135deg,#2E8EF7,#39D5C8)">
+                  {{ entry.username[0].upper() }}
+                </div>
+                <div>
+                  <div class="font-semibold text-white text-sm {{ 'text-ocean-300' if entry.is_current }}">
+                    {{ entry.username }}{% if entry.is_current %} <span class="text-xs text-ocean-500">(you)</span>{% endif %}
+                  </div>
+                  <div class="rank-badge text-xs">{{ entry.rank_name }}</div>
+                </div>
+              </div>
+            </td>
+
+            <!-- NM -->
+            <td class="px-5 py-3.5 text-right">
+              <span class="text-amber-300 font-bold">{{ entry.nautical_miles }}</span>
+              <span class="text-slate-600 text-xs"> NM</span>
+            </td>
+
+            <!-- Courses -->
+            <td class="px-5 py-3.5 text-right hidden sm:table-cell text-slate-400 text-sm">{{ entry.courses_enrolled }}</td>
+
+            <!-- Streak -->
+            <td class="px-5 py-3.5 text-right hidden sm:table-cell">
+              {% if entry.streak_days > 0 %}
+              <span class="text-amber-400 text-sm">🔥 {{ entry.streak_days }}d</span>
+              {% else %}
+              <span class="text-slate-700">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if current_user_rank %}
+  <div class="mt-4 text-center">
+    <button onclick="document.getElementById('my-row')?.scrollIntoView({behavior:'smooth',block:'center'})"
+            class="text-sm text-ocean-400 hover:text-ocean-300 transition-colors font-medium flex items-center gap-1.5 mx-auto">
+      <span class="material-icons-round" style="font-size:16px">person_pin</span>
+      Your rank: #{{ current_user_rank }}
+    </button>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="card p-16 text-center">
+    <span class="material-icons-round text-slate-700 text-6xl mb-4">military_tech</span>
+    <h3 class="text-lg font-semibold text-white mb-2">No navigators yet</h3>
+    <p class="text-slate-500">Be the first to earn Nautical Miles!</p>
+    <a href="{{ url_for('courses_catalog') }}" class="btn-primary mt-5 px-6 py-2.5 text-sm inline-flex items-center gap-2">
+      <span class="material-icons-round" style="font-size:16px">school</span>Start a Course
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+{% block scripts %}
+<script>
+  if (typeof gsap !== 'undefined' && gsap.utils && gsap.to) {
+    gsap.utils.toArray('.animate-in').forEach((el, i) => {
+      gsap.to(el, { opacity:1, y:0, duration:.4, delay: i*0.1, ease:'power2.out' });
+    });
+  }
+</script>
+{% endblock %}
+{% endblock %}

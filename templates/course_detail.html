@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block title %}{{ course.title }} — LurniqHub{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<div class="relative overflow-hidden"
+     style="background:linear-gradient(135deg,{{ course.theme.from }}22,#0A0E1A 60%,#0A0E1A);border-bottom:1px solid rgba(255,255,255,.06)">
+  <div class="absolute inset-0 opacity-20" style="background:radial-gradient(ellipse at 80% 50%,{{ course.theme.from }}55,transparent 60%)"></div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 relative z-10">
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-2 text-sm text-slate-500 mb-6">
+      <a href="{{ url_for('courses_catalog') }}" class="hover:text-white transition-colors">Courses</a>
+      <span class="material-icons-round" style="font-size:14px">chevron_right</span>
+      <span class="text-slate-300">{{ course.title }}</span>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-8 items-start">
+      <div class="flex-1">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+               style="background:linear-gradient(135deg,{{ course.theme.from }},{{ course.theme.to }})">
+            <span class="material-icons-round text-white" style="font-size:28px">{{ course.icon }}</span>
+          </div>
+          <div>
+            <div class="flex gap-2 flex-wrap mb-1">
+              <span class="text-xs font-medium px-2.5 py-1 rounded-full" style="background:{{ course.theme.from }}33;color:{{ course.theme.from }}">{{ course.category }}</span>
+              <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-white/8 text-slate-300">{{ course.difficulty }}</span>
+              <span class="text-xs font-medium px-2.5 py-1 rounded-full bg-white/8 text-slate-300">{{ course.grade_level }}</span>
+            </div>
+          </div>
+        </div>
+
+        <h1 class="text-3xl sm:text-4xl font-black text-white mb-3 leading-tight">{{ course.title }}</h1>
+        <p class="text-slate-300 text-base leading-relaxed mb-6 max-w-2xl">{{ course.description }}</p>
+
+        <!-- Stats row -->
+        <div class="flex flex-wrap gap-5 text-sm">
+          <div class="flex items-center gap-2 text-slate-300">
+            <span class="material-icons-round text-ocean-400" style="font-size:18px">menu_book</span>
+            <strong class="text-white">{{ total_lessons }}</strong> lessons
+          </div>
+          <div class="flex items-center gap-2 text-slate-300">
+            <span class="material-icons-round text-wave-400" style="font-size:18px">view_module</span>
+            <strong class="text-white">{{ course.modules | length }}</strong> modules
+          </div>
+          {% if course.simulation %}
+          <div class="flex items-center gap-2 text-slate-300">
+            <span class="material-icons-round text-amber-400" style="font-size:18px">gamepad</span>
+            <strong class="text-white">1</strong> bridge simulation
+          </div>
+          {% endif %}
+          <div class="flex items-center gap-2 text-amber-300">
+            <span class="material-icons-round text-amber-400" style="font-size:18px">anchor</span>
+            Up to <strong class="text-amber-200 ml-1">{{ total_lessons * 15 + 35 }}</strong> NM
+          </div>
+        </div>
+      </div>
+
+      <!-- Enroll card -->
+      <div class="w-full lg:w-80 flex-shrink-0">
+        <div class="card p-6">
+          {% if is_enrolled %}
+          <div class="flex items-center gap-2 mb-4">
+            <span class="material-icons-round text-emerald-400" style="font-size:20px">check_circle</span>
+            <span class="text-emerald-400 font-semibold text-sm">Enrolled</span>
+          </div>
+          <div class="mb-4">
+            <div class="flex justify-between text-xs text-slate-500 mb-2"><span>Progress</span><span>{{ done_count }}/{{ total_lessons }}</span></div>
+            <div class="progress-bar h-2">
+              <div class="progress-fill" data-pct="{{ (done_count / total_lessons * 100) | round | int if total_lessons else 0 }}" style="width:0%"></div>
+            </div>
+          </div>
+          {% if modules %}
+          {% set first_mod = modules[0] %}
+          {% set first_lesson = first_mod.lessons[0] %}
+          <a href="{{ url_for('lesson', slug=course.slug, mod_id=first_mod.id, lesson_id=first_lesson.id) }}"
+             class="btn-primary w-full py-3 text-sm flex items-center justify-center gap-2 mb-3">
+            <span class="material-icons-round" style="font-size:17px">play_arrow</span>
+            {% if done_count == 0 %}Start Learning{% else %}Continue{% endif %}
+          </a>
+          {% endif %}
+          {% if course.simulation %}
+          <a href="{{ url_for('simulation', slug=course.slug) }}"
+             class="btn-ghost w-full py-2.5 text-sm flex items-center justify-center gap-2">
+            <span class="material-icons-round" style="font-size:17px">gamepad</span>
+            Bridge Simulation {{ '✓' if sim_done }}
+          </a>
+          {% endif %}
+          {% else %}
+          <p class="text-sm text-slate-400 mb-5 leading-relaxed">Enrol to unlock all lessons, quizzes and the bridge simulation.</p>
+          <form method="POST" action="{{ url_for('enroll_course', slug=course.slug) }}">
+            {% if csrf_token is defined %}
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% endif %}
+            <button type="submit" class="btn-primary w-full py-3.5 text-sm flex items-center justify-center gap-2">
+              <span class="material-icons-round" style="font-size:17px">directions_boat</span>
+              Enrol — Free
+            </button>
+          </form>
+          <div class="mt-3 flex items-center gap-2 text-xs text-amber-300/70">
+            <span class="material-icons-round" style="font-size:13px">bolt</span>
+            Earn +10 NM on enrolment
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Content body -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Module accordion -->
+    <div class="lg:col-span-2" x-data="{open: 0}">
+      <h2 class="text-xl font-bold text-white mb-4">Course Content</h2>
+      {% for mod in modules %}
+      <div class="card mb-3 overflow-hidden">
+        <button @click="open === {{ loop.index0 }} ? open = -1 : open = {{ loop.index0 }}"
+                class="w-full flex items-center justify-between p-5 text-left hover:bg-white/3 transition-all">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-ocean-300"
+                 style="background:rgba(46,142,247,.12)">{{ loop.index }}</div>
+            <div>
+              <div class="font-semibold text-white text-sm">{{ mod.title }}</div>
+              <div class="text-xs text-slate-500 mt-0.5">{{ mod.lessons | length }} lessons</div>
+            </div>
+          </div>
+          <span class="material-icons-round text-slate-500 transition-transform"
+                :class="open === {{ loop.index0 }} ? 'rotate-180' : ''" style="font-size:20px">expand_more</span>
+        </button>
+
+        <div x-show="open === {{ loop.index0 }}" x-transition class="border-t border-white/5">
+          {% for l in mod.lessons %}
+          <div class="flex items-center gap-3 px-5 py-3.5 hover:bg-white/2 transition-all
+            {{ 'border-l-2 border-emerald-500' if l.done else 'border-l-2 border-transparent' }}">
+            <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0
+              {{ 'bg-emerald-500/20' if l.done else 'bg-white/5' }}">
+              <span class="material-icons-round {{ 'text-emerald-400' if l.done else 'text-slate-600' }}" style="font-size:14px">
+                {{ 'check' if l.done else 'play_arrow' }}
+              </span>
+            </div>
+            <div class="flex-1">
+              {% if is_enrolled %}
+              <a href="{{ url_for('lesson', slug=course.slug, mod_id=mod.id, lesson_id=l.id) }}"
+                 class="text-sm {{ 'text-emerald-400' if l.done else 'text-white hover:text-ocean-300' }} font-medium transition-colors">
+                {{ l.title }}
+              </a>
+              {% else %}
+              <span class="text-sm text-slate-500">{{ l.title }}</span>
+              {% endif %}
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="text-xs text-slate-600 flex items-center gap-1">
+                <span class="material-icons-round" style="font-size:12px">schedule</span>{{ l.minutes }}m
+              </span>
+              {% if not l.done %}
+              <span class="text-xs text-amber-500/60">+15 NM</span>
+              {% endif %}
+              {% if not is_enrolled %}
+              <span class="material-icons-round text-slate-700" style="font-size:14px">lock</span>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="space-y-5">
+
+      <!-- Simulation teaser -->
+      {% if course.simulation %}
+      <div class="relative overflow-hidden rounded-2xl p-5" style="background:linear-gradient(135deg,#0D1B3E,#0A0E1A);border:1px solid rgba(46,142,247,.25)">
+        <div class="absolute right-0 top-0 w-32 h-32 opacity-10" style="background:radial-gradient(circle,#2E8EF7,transparent);transform:translate(20%,-20%)"></div>
+        <div class="relative z-10">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="material-icons-round text-ocean-400" style="font-size:22px">gamepad</span>
+            <span class="text-sm font-bold text-white">Bridge Simulation</span>
+            {% if sim_done %}<span class="text-xs text-emerald-400 font-medium ml-auto">✓ Done</span>{% endif %}
+          </div>
+          <h4 class="font-bold text-white text-base mb-1">{{ course.simulation.title }}</h4>
+          <p class="text-xs text-slate-400 leading-relaxed mb-4">{{ course.simulation.briefing }}</p>
+          <div class="flex justify-between text-xs text-slate-500 mb-4">
+            <span>Pass score: {{ course.simulation.pass_score }}%</span>
+            <span>Up to {{ course.simulation.max_nm }} NM</span>
+          </div>
+          {% if is_enrolled %}
+          <a href="{{ url_for('simulation', slug=course.slug) }}"
+             class="btn-primary w-full py-2.5 text-sm flex items-center justify-center gap-2">
+            <span class="material-icons-round" style="font-size:16px">sailing</span>
+            Launch Simulation
+          </a>
+          {% else %}
+          <div class="flex items-center gap-2 text-xs text-slate-600 justify-center py-2">
+            <span class="material-icons-round" style="font-size:14px">lock</span>Enrol to unlock simulation
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- NM breakdown -->
+      <div class="card p-5">
+        <h3 class="text-sm font-bold text-white mb-4">What You'll Earn</h3>
+        <div class="space-y-3">
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400 flex items-center gap-1.5"><span class="material-icons-round text-emerald-400" style="font-size:14px">directions_boat</span>On enrolment</span>
+            <span class="text-amber-300 font-semibold">+10 NM</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400 flex items-center gap-1.5"><span class="material-icons-round text-ocean-400" style="font-size:14px">menu_book</span>Per lesson (×{{ total_lessons }})</span>
+            <span class="text-amber-300 font-semibold">+{{ total_lessons * 15 }} NM</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400 flex items-center gap-1.5"><span class="material-icons-round text-wave-400" style="font-size:14px">emoji_events</span>Course complete</span>
+            <span class="text-amber-300 font-semibold">+25 NM</span>
+          </div>
+          {% if course.simulation %}
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400 flex items-center gap-1.5"><span class="material-icons-round text-amber-400" style="font-size:14px">gamepad</span>Simulation (max)</span>
+            <span class="text-amber-300 font-semibold">+{{ course.simulation.max_nm }} NM</span>
+          </div>
+          {% endif %}
+          <div class="border-t border-white/10 pt-3 flex justify-between text-sm font-bold">
+            <span class="text-white">Total potential</span>
+            <span class="text-amber-300">{{ total_lessons * 15 + 35 + (course.simulation.max_nm if course.simulation else 0) }} NM</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block scripts %}
+<script>
+  if (typeof gsap !== 'undefined' && gsap.from) {
+    gsap.from('h1', {duration:.6, y:20, opacity:0, ease:'power2.out'});
+  }
+</script>
+{% endblock %}
+{% endblock %}

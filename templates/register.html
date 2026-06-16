@@ -1,54 +1,117 @@
 {% extends "base.html" %}
-{% block title %}Register - LurniqHub{% endblock %}
+{% block title %}Create Account — LurniqHub{% endblock %}
+
 {% block content %}
+<div class="min-h-screen flex">
 
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-secondary to-wave py-12 px-4">
-    <div class="max-w-md w-full">
-        <div class="text-center mb-8">
-            <span class="material-icons-round text-white text-6xl mb-4">anchor</span>
-            <h1 class="text-4xl font-bold text-white mb-2">Join LurniqHub</h1>
-            <p class="text-white/80">Start Your Maritime Journey</p>
-        </div>
-        
-        <div class="bg-white rounded-2xl shadow-2xl p-8 register-card">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Create Account</h2>
-            
-            <form method="POST" action="{{ url_for('register') }}">
-                <div class="mb-4">
-                    <label class="block text-gray-700 font-medium mb-2">Username</label>
-                    <input type="text" name="username" required minlength="3"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition">
-                    <p class="text-sm text-gray-500 mt-1">At least 3 characters</p>
-                </div>
-                
-                <div class="mb-6">
-                    <label class="block text-gray-700 font-medium mb-2">Password</label>
-                    <input type="password" name="password" required minlength="6"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent transition">
-                    <p class="text-sm text-gray-500 mt-1">At least 6 characters</p>
-                </div>
-                
-                <button type="submit" 
-                        class="w-full bg-secondary hover:bg-wave text-white font-bold py-3 rounded-lg transition transform hover:scale-105">
-                    Register
-                </button>
-            </form>
-            
-            <p class="text-center text-gray-600 mt-6">
-                Already have an account? 
-                <a href="{{ url_for('login') }}" class="text-secondary font-bold hover:underline">Login</a>
-            </p>
-        </div>
+  <!-- ── Left panel ──────────────────────────────────────────────────────── -->
+  <div class="hidden lg:flex lg:w-[52%] relative overflow-hidden flex-col justify-between p-14"
+       style="background:linear-gradient(155deg,#05080F 0%,#0B2030 55%,#06151A 100%)">
+    <div class="absolute inset-0 opacity-25" style="background-image:linear-gradient(rgba(57,213,200,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(57,213,200,.12) 1px,transparent 1px);background-size:56px 56px"></div>
+    <div class="absolute top-1/3 right-1/3 w-80 h-80 rounded-full opacity-8 pulse" style="background:radial-gradient(circle,#39D5C8 0%,transparent 70%)"></div>
+
+    <div class="relative z-10 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-wave-500 to-ocean-500 flex items-center justify-center shadow-lg">
+        <span class="material-icons-round text-white">anchor</span>
+      </div>
+      <span class="text-2xl font-bold text-white">LurniqHub</span>
     </div>
+
+    <div class="relative z-10 space-y-7">
+      <div>
+        <h1 class="text-5xl font-black text-white leading-[1.1] mb-5">Join the<br><span style="background:linear-gradient(135deg,#39D5C8,#2E8EF7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Fleet</span></h1>
+        <p class="text-slate-400 text-base leading-relaxed max-w-xs">Start as a Deckhand. Earn Nautical Miles with every lesson. Work your way up to Fleet Admiral.</p>
+      </div>
+
+      <!-- Rank ladder preview -->
+      <div class="space-y-2">
+        {% for r, ico, col in [('Deckhand','anchor','#6B7280'),('Able Seaman','waves','#5BA7F9'),('Navigator','explore','#34D399'),('Captain','workspace_premium','#F5B83D'),('Fleet Admiral','stars','#F472B6')] %}
+        <div class="flex items-center gap-3 px-3 py-2 rounded-lg glass-sm">
+          <span class="material-icons-round" style="font-size:16px;color:{{ col }}">{{ ico }}</span>
+          <span class="text-sm text-slate-300 font-medium">{{ r }}</span>
+          {% if loop.index < 5 %}
+          <div class="flex-1 h-0.5 rounded" style="background:linear-gradient(90deg,{{ col }}44,transparent)"></div>
+          {% else %}
+          <span class="ml-auto text-xs text-slate-600">pinnacle</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="relative z-10 text-xs text-slate-700">Courses · Simulators · Real career pathways into SA's blue economy</div>
+  </div>
+
+  <!-- ── Right panel: form ───────────────────────────────────────────────── -->
+  <div class="flex-1 flex items-center justify-center p-6 sm:p-10">
+    <div class="w-full max-w-[400px]">
+
+      <div class="lg:hidden flex items-center gap-2.5 mb-10">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-wave-500 to-ocean-500 flex items-center justify-center">
+          <span class="material-icons-round text-white" style="font-size:17px">anchor</span>
+        </div>
+        <span class="font-bold text-lg text-white">LurniqHub</span>
+      </div>
+
+      <div class="mb-8">
+        <h2 class="text-3xl font-bold text-white mb-2">Create account</h2>
+        <p class="text-slate-400 text-sm">Start your maritime journey — completely free.</p>
+      </div>
+
+      <form method="POST" action="{{ url_for('register') }}" class="space-y-4">
+        {# CSRF token (Flask-WTF or similar) - server should render this #}
+        {% if csrf_token is defined %}
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% endif %}
+        <div>
+          <label for="id_username" class="block text-sm font-medium text-slate-300 mb-1.5">Username</label>
+          <div class="relative">
+            <span class="material-icons-round absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none" style="font-size:17px">badge</span>
+            <input id="id_username" type="text" name="username" required minlength="3" pattern="^[^\s]{3,}$" autocomplete="username" placeholder="at least 3 characters"
+                   class="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 text-white placeholder-slate-600 text-sm
+                          focus:outline-none focus:border-wave-500 focus:ring-1 focus:ring-wave-500/50 transition-all"
+                   style="background:#0F1629" aria-describedby="username-help">
+          </div>
+          <p id="username-help" class="text-xs text-slate-600 mt-1.5">Min. 3 characters, no spaces.</p>
+        </div>
+
+        <div>
+          <label for="id_password" class="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
+          <div class="relative" x-data="{show:false}">
+            <span class="material-icons-round absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600 pointer-events-none" style="font-size:17px">lock</span>
+            <!-- Provide a default type attribute for non-Alpine environments -->
+            <input id="id_password" :type="show?'text':'password'" type="password" name="password" required minlength="6" autocomplete="new-password" placeholder="at least 6 characters"
+                   class="w-full pl-10 pr-12 py-3 rounded-xl border border-white/10 text-white placeholder-slate-600 text-sm
+                          focus:outline-none focus:border-wave-500 focus:ring-1 focus:ring-wave-500/50 transition-all"
+                   style="background:#0F1629" aria-describedby="pwd-help">
+            <button type="button" @click="show=!show" :aria-pressed="show"
+                    class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors" aria-label="Show or hide password">
+              <span class="material-icons-round" style="font-size:17px" x-text="show?'visibility_off':'visibility'">visibility</span>
+            </button>
+          </div>
+          <p id="pwd-help" class="text-xs text-slate-600 mt-1.5">Min. 6 characters.</p>
+        </div>
+
+        <div class="pt-1">
+          <button type="submit"
+                  class="w-full py-3.5 text-sm font-semibold flex items-center justify-center gap-2 rounded-xl text-white transition-all"
+                  style="background:linear-gradient(135deg,#39D5C8,#2E8EF7);box-shadow:0 4px 20px rgba(57,213,200,.25)">
+            <span class="material-icons-round" style="font-size:17px">directions_boat</span>
+            Set Sail — Create Account
+          </button>
+        </div>
+      </form>
+
+      <!-- NM first-login preview -->
+      <div class="mt-6 flex items-center gap-3 p-3 rounded-xl" style="background:rgba(245,184,61,.06);border:1px solid rgba(245,184,61,.15)">
+        <span class="material-icons-round text-amber-400" style="font-size:18px">bolt</span>
+        <p class="text-xs text-amber-300/80">You'll earn <span class="font-semibold text-amber-300">+5 NM</span> just for logging in each day. Start climbing the leaderboard immediately.</p>
+      </div>
+
+      <p class="text-center text-sm text-slate-500 mt-5">
+        Already have an account? <a href="{{ url_for('login') }}" class="text-ocean-400 font-medium hover:text-ocean-300 transition-colors">Log in →</a>
+      </p>
+    </div>
+  </div>
 </div>
-
-<script>
-    gsap.from('.register-card', {
-        duration: 0.8,
-        y: 50,
-        opacity: 0,
-        ease: 'power3.out'
-    });
-</script>
-
 {% endblock %}
