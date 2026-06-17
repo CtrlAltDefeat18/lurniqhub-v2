@@ -1,6 +1,26 @@
-Flask==3.0.0
+Flask==2.2.5
 pymongo==4.6.1
 python-dotenv==1.0.0
-bcrypt==4.1.2
-dnspython==2.4.2
+
+Flask==2.2.5
+pymongo==4.6.1
+python-dotenv==1.0.0
+dnspython==2.4.2    # needed only for mongodb+srv URIs (Atlas)
 gunicorn==21.2.0
+
+# Notes:
+# - The `bson` package is not required; pymongo includes the bson module used by the app.
+# - bcrypt is not used by the current code (werkzeug.generate_password_hash is used),
+#   add it only if you change password hashing implementations.
+
+
+Flask==2.2.5
+pymongo==4.6.1
+python-dotenv==1.0.0
+dnspython==2.4.2    # needed only for mongodb+srv URIs (Atlas)
+gunicorn==21.2.0
+
+# Notes:
+# - The `bson` package is not required; pymongo includes the bson module used by the app.
+# - bcrypt is not used by the current code (werkzeug.generate_password_hash is used),
+#   add it only if you change password hashing implementations.

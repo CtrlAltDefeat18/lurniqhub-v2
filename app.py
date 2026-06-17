@@ -14,6 +14,7 @@ from seed_data import (
     rank_for_miles,
 )
 
+# ── App setup (do NOT touch DB/env config) ────────────────────────────────────
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 
@@ -30,6 +31,8 @@ logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
 def login_required(f):
     @wraps(f)
     def _wrap(*args, **kwargs):
@@ -41,20 +44,22 @@ def login_required(f):
 
 
 def _get_stats(user_id: str) -> dict:
+    """Return user_stats document with safe defaults for every field."""
     s = user_stats.find_one({'user_id': user_id}) or {}
     return {
-        'nautical_miles':        s.get('nautical_miles', 0),
-        'rank_name':             s.get('rank_name', 'Deckhand'),
-        'rank_level':            s.get('rank_level', 1),
-        'streak_days':           s.get('streak_days', 0),
-        'total_logins':          s.get('total_logins', 0),
-        'courses_enrolled':      s.get('courses_enrolled', 0),
-        'lessons_completed':     s.get('lessons_completed', []),
+        'nautical_miles':       s.get('nautical_miles', 0),
+        'rank_name':            s.get('rank_name', 'Deckhand'),
+        'rank_level':           s.get('rank_level', 1),
+        'streak_days':          s.get('streak_days', 0),
+        'total_logins':         s.get('total_logins', 0),
+        'courses_enrolled':     s.get('courses_enrolled', 0),
+        'lessons_completed':    s.get('lessons_completed', []),
         'simulations_completed': s.get('simulations_completed', []),
     }
 
 
 def _award_nm(user_id: str, amount: int, reason: str = '') -> int:
+    """Add NM, recompute rank, return new total."""
     user_stats.update_one(
         {'user_id': user_id},
         {'$inc': {'nautical_miles': amount}},
@@ -73,6 +78,7 @@ def _award_nm(user_id: str, amount: int, reason: str = '') -> int:
 
 
 def _seed_if_needed():
+    """Idempotent: insert seed courses and create indexes once."""
     for c in SEED_COURSES:
         if not courses.find_one({'slug': c['slug']}):
             doc = {k: v for k, v in c.items()}
@@ -89,11 +95,14 @@ def _seed_if_needed():
 
 @app.context_processor
 def _inject_nav_nm():
+    """Inject current user's NM into every template for the navbar counter."""
     if 'user_id' in session:
         s = user_stats.find_one({'user_id': session['user_id']}) or {}
         return {'nav_nm': s.get('nautical_miles', 0)}
     return {'nav_nm': None}
 
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
 
 @app.route('/')
 def index():
@@ -127,6 +136,7 @@ def register():
                 'is_admin': is_first,
             }).inserted_id
 
+            # Convention: user_id stored as STRING everywhere except users._id
             uid = str(oid)
             user_stats.insert_one({
                 'user_id': uid,
@@ -170,6 +180,7 @@ def login():
             session['username'] = user['username']
             session['is_admin'] = user.get('is_admin', False)
 
+            # Streak & daily-login NM
             now  = datetime.utcnow()
             stat = user_stats.find_one({'user_id': uid}) or {}
             last = stat.get('last_login')
@@ -209,6 +220,8 @@ def logout():
     return redirect(url_for('login'))
 
 
+# ── Dashboard ─────────────────────────────────────────────────────────────────
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -218,6 +231,7 @@ def dashboard():
     nm = stats['nautical_miles']
     rank, next_rank, rank_pct = rank_for_miles(nm)
 
+    # Enrolled courses — join via course_slug (strings throughout)
     enrolled_docs = []
     for enr in enrollments.find({'user_id': uid}):
         slug = enr['course_slug']
@@ -228,18 +242,19 @@ def dashboard():
         done = len([l for l in stats['lessons_completed'] if l.startswith(slug + '/')])
         progress = int(100 * done / lesson_count) if lesson_count else 0
         enrolled_docs.append({
-            'slug':         slug,
-            'title':        c['title'],
-            'tagline':      c.get('tagline', ''),
-            'category':     c.get('category', ''),
-            'grade_level':  c.get('grade_level', ''),
-            'icon':         c.get('icon', 'school'),
-            'theme':        c.get('theme', {'from': '#1976D2', 'to': '#006994'}),
-            'progress':     progress,
+            'slug':        slug,
+            'title':       c['title'],
+            'tagline':     c.get('tagline', ''),
+            'category':    c.get('category', ''),
+            'grade_level': c.get('grade_level', ''),
+            'icon':        c.get('icon', 'school'),
+            'theme':       c.get('theme', {'from': '#1976D2', 'to': '#006994'}),
+            'progress':    progress,
             'lesson_count': lesson_count,
-            'done':         done,
+            'done':        done,
         })
 
+    # Leaderboard — user_id is STRING; look up users._id with ObjectId()
     lb_raw = list(user_stats.find().sort('nautical_miles', DESCENDING).limit(10))
     leaderboard = []
     current_user_rank = None
@@ -263,11 +278,18 @@ def dashboard():
 
     return render_template(
         'dashboard.html',
-        stats=stats, nm=nm, rank=rank, next_rank=next_rank, rank_pct=rank_pct,
-        enrolled_courses=enrolled_docs, leaderboard=leaderboard,
+        stats=stats,
+        nm=nm,
+        rank=rank,
+        next_rank=next_rank,
+        rank_pct=rank_pct,
+        enrolled_courses=enrolled_docs,
+        leaderboard=leaderboard,
         current_user_rank=current_user_rank,
     )
 
+
+# ── Course catalogue ──────────────────────────────────────────────────────────
 
 @app.route('/courses')
 @login_required
@@ -283,20 +305,20 @@ def courses_catalog():
         done = len([l for l in stats['lessons_completed'] if l.startswith(slug + '/')])
         progress = int(100 * done / lesson_count) if lesson_count else 0
         catalog.append({
-            'slug':           slug,
-            'title':          c['title'],
-            'tagline':        c.get('tagline', ''),
-            'category':       c.get('category', ''),
-            'grade_level':    c.get('grade_level', ''),
-            'difficulty':     c.get('difficulty', 'Beginner'),
-            'icon':           c.get('icon', 'school'),
-            'theme':          c.get('theme', {'from': '#1976D2', 'to': '#006994'}),
-            'lesson_count':   lesson_count,
-            'module_count':   len(c.get('modules', [])),
+            'slug':         slug,
+            'title':        c['title'],
+            'tagline':      c.get('tagline', ''),
+            'category':     c.get('category', ''),
+            'grade_level':  c.get('grade_level', ''),
+            'difficulty':   c.get('difficulty', 'Beginner'),
+            'icon':         c.get('icon', 'school'),
+            'theme':        c.get('theme', {'from': '#1976D2', 'to': '#006994'}),
+            'lesson_count': lesson_count,
+            'module_count': len(c.get('modules', [])),
             'has_simulation': bool(c.get('simulation')),
-            'is_enrolled':    slug in enrolled_slugs,
-            'progress':       progress,
-            'done':           done,
+            'is_enrolled':  slug in enrolled_slugs,
+            'progress':     progress,
+            'done':         done,
         })
     categories = sorted({c['category'] for c in catalog})
     return render_template('courses.html', catalog=catalog, categories=categories)
@@ -331,8 +353,12 @@ def course_detail(slug):
 
     return render_template(
         'course_detail.html',
-        course=c, modules=modules_out, is_enrolled=is_enrolled,
-        total_lessons=total_lessons, done_count=done_count, sim_done=sim_done,
+        course=c,
+        modules=modules_out,
+        is_enrolled=is_enrolled,
+        total_lessons=total_lessons,
+        done_count=done_count,
+        sim_done=sim_done,
     )
 
 
@@ -364,6 +390,8 @@ def enroll_course(slug):
     return redirect(url_for('course_detail', slug=slug))
 
 
+# ── Lessons ───────────────────────────────────────────────────────────────────
+
 @app.route('/courses/<slug>/module/<mod_id>/lesson/<lesson_id>')
 @login_required
 def lesson(slug, mod_id, lesson_id):
@@ -386,6 +414,7 @@ def lesson(slug, mod_id, lesson_id):
     full_id = f'{slug}/{mod_id}/{lesson_id}'
     is_done = full_id in stats['lessons_completed']
 
+    # Prev / next navigation across all lessons
     flat = [(m['id'], l['id']) for m in c['modules'] for l in m['lessons']]
     idx = next((i for i, (m, l) in enumerate(flat) if m == mod_id and l == lesson_id), 0)
     prev_l = flat[idx - 1] if idx > 0 else None
@@ -393,9 +422,16 @@ def lesson(slug, mod_id, lesson_id):
 
     return render_template(
         'lesson.html',
-        course=c, module=module, lesson=lesson_doc, full_id=full_id,
-        is_done=is_done, prev_lesson=prev_l, next_lesson=next_l,
-        nm_reward=NM_LESSON, lesson_index=idx + 1, total_lessons=len(flat),
+        course=c,
+        module=module,
+        lesson=lesson_doc,
+        full_id=full_id,
+        is_done=is_done,
+        prev_lesson=prev_l,
+        next_lesson=next_l,
+        nm_reward=NM_LESSON,
+        lesson_index=idx + 1,
+        total_lessons=len(flat),
     )
 
 
@@ -416,6 +452,7 @@ def complete_lesson(slug, mod_id, lesson_id):
     )
     new_total = _award_nm(uid, NM_LESSON, f'lesson {full_id}')
 
+    # Bonus on 100% course completion
     bonus = 0
     c = courses.find_one({'slug': slug})
     if c:
@@ -434,6 +471,8 @@ def complete_lesson(slug, mod_id, lesson_id):
     })
 
 
+# ── Simulation ────────────────────────────────────────────────────────────────
+
 @app.route('/courses/<slug>/simulation')
 @login_required
 def simulation(slug):
@@ -449,12 +488,18 @@ def simulation(slug):
     stats = _get_stats(uid)
     sim = c['simulation']
     sim_done = slug in stats.get('simulations_completed', [])
+
+    # Pass config as pre-serialised JSON so tojson filter never touches ObjectId
     sim_config_json = json.dumps(sim['config'])
 
     return render_template(
         'simulation.html',
-        course=c, sim=sim, sim_done=sim_done, sim_config_json=sim_config_json,
-        max_nm=sim.get('max_nm', 60), pass_score=sim.get('pass_score', 60),
+        course=c,
+        sim=sim,
+        sim_done=sim_done,
+        sim_config_json=sim_config_json,
+        max_nm=sim.get('max_nm', 60),
+        pass_score=sim.get('pass_score', 60),
     )
 
 
@@ -493,6 +538,8 @@ def submit_simulation(slug):
     })
 
 
+# ── Leaderboard ───────────────────────────────────────────────────────────────
+
 @app.route('/leaderboard')
 @login_required
 def leaderboard():
@@ -508,14 +555,14 @@ def leaderboard():
         uname = u['username'] if u else 'Unknown'
         r, _, _ = rank_for_miles(entry.get('nautical_miles', 0))
         board.append({
-            'rank_pos':         i,
-            'username':         uname,
-            'nautical_miles':   entry.get('nautical_miles', 0),
-            'rank_name':        r['name'],
-            'rank_level':       r['level'],
+            'rank_pos':        i,
+            'username':        uname,
+            'nautical_miles':  entry.get('nautical_miles', 0),
+            'rank_name':       r['name'],
+            'rank_level':      r['level'],
             'courses_enrolled': entry.get('courses_enrolled', 0),
-            'streak_days':      entry.get('streak_days', 0),
-            'is_current':       entry['user_id'] == uid,
+            'streak_days':     entry.get('streak_days', 0),
+            'is_current':      entry['user_id'] == uid,
         })
         if entry['user_id'] == uid:
             current_user_rank = i
@@ -523,11 +570,15 @@ def leaderboard():
     return render_template('leaderboard.html', board=board, current_user_rank=current_user_rank)
 
 
+# ── Opportunities ─────────────────────────────────────────────────────────────
+
 @app.route('/opportunities')
 @login_required
 def opportunities():
     return render_template('opportunities.html', sections=OPPORTUNITIES)
 
+
+# ── Profile ───────────────────────────────────────────────────────────────────
 
 @app.route('/profile')
 @login_required
@@ -541,10 +592,17 @@ def profile():
 
     return render_template(
         'profile.html',
-        stats=stats, nm=nm, rank=rank, next_rank=next_rank, rank_pct=rank_pct,
-        enrolled_slugs=enrolled_slugs, all_ranks=RANKS,
+        stats=stats,
+        nm=nm,
+        rank=rank,
+        next_rank=next_rank,
+        rank_pct=rank_pct,
+        enrolled_slugs=enrolled_slugs,
+        all_ranks=RANKS,
     )
 
+
+# ── Health ────────────────────────────────────────────────────────────────────
 
 @app.route('/health')
 def health():

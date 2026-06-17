@@ -23,7 +23,7 @@
 
     <!-- Cards grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {% for item in section.items %}
+      {% for item in section['items'] %}
       <div class="card p-5 hover:border-ocean-500/25 animate-in flex flex-col gap-3">
         <div class="flex items-start justify-between gap-3">
           <h3 class="font-semibold text-white text-base leading-snug">{{ item.title }}</h3>
