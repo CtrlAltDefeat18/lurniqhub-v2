@@ -1,17 +1,15 @@
 """
-LurniqHub smoke test — run this any time to prove the app works end to end.
+LurniqHub smoke test — end to end.
 
     python test_smoke.py
 
-It uses a TEMPORARY database (test_smoke.db), so it never touches your real
-lurniqhub.db. Safe to run in front of a friend, collaborator, or examiner.
-Exits 0 and prints "ALL CHECKS PASSED" if everything is healthy.
+Uses test_smoke.db.
 """
 import os
 import sys
 import tempfile
 
-# Point the app at a throwaway DB BEFORE importing it (app.py builds the DB on import).
+
 _TEST_DB = os.path.join(tempfile.gettempdir(), 'lurniqhub_smoke_test.db')
 for ext in ('', '-wal', '-shm'):
     try: os.remove(_TEST_DB + ext)
@@ -86,7 +84,7 @@ def main():
         r = cl.post(f'/courses/{s}/simulation/submit', json={'score': 85})
         check("repeating a passed simulation awards 0", r.get_json().get('already_done') is True)
 
-    # --- persistence: re-read straight from the DB, as a fresh process would ---
+    
     stats = appmod._get_stats('1')
     check("stats persisted to disk", stats['nautical_miles'] > 0)
     check("rank promoted past Deckhand", stats['rank_level'] >= 2)
@@ -97,7 +95,7 @@ def main():
 
     print()
     print(f"  {PASS} passed, {FAIL} failed")
-    # tidy up the throwaway DB
+  
     for ext in ('', '-wal', '-shm'):
         try: os.remove(_TEST_DB + ext)
         except OSError: pass
