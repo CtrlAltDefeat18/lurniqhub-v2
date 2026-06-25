@@ -16,10 +16,7 @@ from seed_data import (
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 
-# ---------------------------------------------------------------------------
-# Database — local SQLite file. No server, no network, survives restarts.
-# Override location with DATABASE_PATH if you want the file elsewhere.
-# ---------------------------------------------------------------------------
+
 DB_PATH = os.getenv('DATABASE_PATH',
                     os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lurniqhub.db'))
 
@@ -30,7 +27,7 @@ log = logging.getLogger(__name__)
 def get_conn():
     conn = sqlite3.connect(DB_PATH, timeout=10)
     conn.row_factory = sqlite3.Row
-    conn.execute('PRAGMA journal_mode=WAL')   # better concurrency + speed
+    conn.execute('PRAGMA journal_mode=WAL')   
     conn.execute('PRAGMA foreign_keys=ON')
     return conn
 
@@ -75,9 +72,7 @@ def init_db():
         ''')
 
 
-# ---------------------------------------------------------------------------
-# Data-access helpers  (replace the old Mongo collection calls)
-# ---------------------------------------------------------------------------
+
 def find_user_by_username(username):
     with get_conn() as c:
         return c.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
@@ -219,7 +214,7 @@ def leaderboard_rows(limit):
 
 
 # ---------------------------------------------------------------------------
-# Auth guard
+# Authorisation
 # ---------------------------------------------------------------------------
 def login_required(f):
     @wraps(f)
