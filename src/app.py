@@ -14,11 +14,15 @@ from seed_data import (
 )
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
+_secret = os.getenv('SECRET_KEY')
+if not _secret and os.getenv('FLASK_ENV') == 'production':
+    raise RuntimeError('SECRET_KEY must be set in production')
+app.config['SECRET_KEY'] = _secret or 'dev-secret-key'
 
-
-DB_PATH = os.getenv('DATABASE_PATH',
-                    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lurniqhub.db'))
+# app.py lives in src/, so the repo root is one level up.
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.getenv('DATABASE_PATH', os.path.join(ROOT_DIR, 'data', 'lurniqhub.db'))
+os.makedirs(os.path.dirname(DB_PATH) or '.', exist_ok=True)
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -662,4 +666,4 @@ init_db()
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=int(os.getenv('PORT', 5000)))
+    app.run (debug=os.getenv('FLASK_DEBUG') == '1', host=os.getenv('HOST', '127.0.0.1'), port=int(os.getenv('PORT', 8080)), )

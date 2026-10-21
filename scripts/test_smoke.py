@@ -16,6 +16,8 @@ for ext in ('', '-wal', '-shm'):
     except OSError: pass
 os.environ['DATABASE_PATH'] = _TEST_DB
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'src'))
+
 import app as appmod  # noqa: E402
 
 PASS, FAIL = 0, 0
