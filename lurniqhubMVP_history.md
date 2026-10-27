@@ -1,3 +1,9 @@
+# Historical archive
+
+This file records an earlier MongoDB/Railway implementation phase. It is not
+the current architecture or setup guide. For the implemented application, see
+`README.md` and `docs/architecture.md`.
+
 # Summary
 
 LurniqHub purpose, target users, V2.0 stack, and current build state including the active MongoDB blocker

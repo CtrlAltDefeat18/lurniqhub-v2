@@ -8,7 +8,8 @@ the ports of Durban, Cape Town and Richards Bay, and the Agulhas/Benguela
 current systems.
 
 This module is pure data + tiny pure helpers. It performs no I/O and opens
-no database connections; app.py imports it and seeds Mongo on first request.
+no database connections; app.py imports it and seeds SQLite on selected
+catalogue requests.
 """
 
 # ---------------------------------------------------------------------------

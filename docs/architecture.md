@@ -1,6 +1,7 @@
 # Architecture
 
-Verified against `main` commit `3c822de` (21/10/2026). This describes implemented behaviour; the other project documents include future MVP goals.
+This describes the behaviour implemented in the current tree; the other
+project documents include future MVP goals.
 
 ## Layout and runtime
 
@@ -8,10 +9,10 @@ Verified against `main` commit `3c822de` (21/10/2026). This describes implemente
 - `src/seed_data.py`: five course documents with nested modules, lessons, quizzes and simulation configuration; eight ranks, reward constants, opportunity links and pure helpers.
 - `src/templates/`: `base.html` plus login, register, dashboard, courses, course_detail, lesson, simulation, leaderboard, profile and opportunities pages.
 - `src/static/js/`: `main.js` (counters/progress/animations) and `simulator.js` (Canvas helm simulation). No local CSS or image assets.
-- Root: `test_smoke.py`, `requirements.txt`, `runtime.txt`, `Procfile`, `.env.example`, `AGENTS.md`, `README.md`, `lurniqhubMVP_history.md`, `.vscode/` and `docs/`. `scripts/` contains additional seed and smoke files; `requirements.txt.tmp` is a legacy dependency list.
+- Root: `test_smoke.py`, `requirements.txt`, `runtime.txt`, `Procfile`, `.env.example`, `AGENTS.md`, `README.md`, `lurniqhubMVP_history.md`, `.vscode/` and `docs/`. `scripts/` contains legacy copies of the seed and smoke files; the active entry points are `src/seed_data.py` and the root `test_smoke.py`. `requirements.txt.tmp` is a legacy dependency list.
 - No `package.json`, `pyproject.toml`, `tests/` or GitHub Actions workflow is present.
 
-Flask 3.0.0 renders Jinja templates; Werkzeug hashes passwords and Flask signs cookie sessions. SQLite uses WAL with a ten-second connection timeout. Gunicorn 21.2.0 and python-dotenv 1.0.0 are declared; Python 3.11.7 is pinned. No MongoDB, ORM, frontend bundler or external database server is used.
+Flask 3.0.0 renders Jinja templates; Werkzeug hashes passwords and Flask signs cookie sessions. SQLite uses WAL with a ten-second connection timeout. Gunicorn 21.2.0 is declared and Python 3.11.7 is pinned. No MongoDB, ORM, frontend bundler or external database server is used.
 
 `base.html` loads Tailwind, Alpine.js, GSAP, Google Fonts and Material Icons from CDNs. Templates contain inline CSS/JavaScript; lesson completion and simulation submission use `fetch`. Quizzes and simulation scoring run in the browser. No service worker or local progress synchronisation exists.
 
@@ -98,5 +99,5 @@ CREATE TABLE IF NOT EXISTS user_stats (
 - Completion checks, JSON-array updates and rewards span transactions, risking duplicate awards/lost updates under concurrency. No schema migration mechanism or foreign-key constraints exist.
 - No CSRF enforcement or login/registration rate limiting; conditional token markup does not provide protection. Logout changes state via GET. No account deletion or consent workflow is implemented.
 - CDN assets prevent reliable offline use and add mobile bandwidth cost. Inline scripts/styles and duplicated content in `scripts/` increase maintenance effort. PWA caching/sync remains future scope per AGENTS.md.
-- README commands/port/database path and the seed module's MongoDB comment are stale. Active requirements have no MongoDB packages; those remain only in `requirements.txt.tmp`.
+- `lurniqhubMVP_history.md` and the files under `scripts/` preserve older MongoDB-era notes and are not active application entry points. The active requirements contain no MongoDB packages; the legacy dependency list remains only in `requirements.txt.tmp`.
 - Opportunity data has no enforced verification-date policy. Pathway matching, learner subject/marks profiles and teacher tools described in planning docs are not implemented.
