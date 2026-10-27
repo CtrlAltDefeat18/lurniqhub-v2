@@ -32,6 +32,7 @@ def check(label, condition):
         print(f"  \u2717 {label}   <-- FAILED")
 
 def main():
+    check("course catalogue seeded at import", len(appmod.active_courses()) > 0)
     appmod.init_db()
     appmod._seed_if_needed()
 

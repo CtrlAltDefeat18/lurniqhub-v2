@@ -660,9 +660,10 @@ def health():
     return {'status': 'ok', 'db': db_ok}, 200
 
 
-# Initialise the database as soon as the app is imported (works under
+# Initialise and seed the database as soon as the app is imported (works under
 # gunicorn too, where __main__ never runs).
 init_db()
+_seed_if_needed()
 
 
 if __name__ == '__main__':
