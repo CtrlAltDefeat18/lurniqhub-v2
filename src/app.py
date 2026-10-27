@@ -143,7 +143,7 @@ def _award_nm(uid, amount, reason=''):
 
 
 def _add_to_array(uid, column, value):
-    """Emulate Mongo $addToSet on a JSON-array column."""
+    """Add a value once to a JSON-array column."""
     ensure_stats_row(uid)
     with get_conn() as c:
         row = c.execute(f'SELECT {column} FROM user_stats WHERE user_id = ?', (uid,)).fetchone()
