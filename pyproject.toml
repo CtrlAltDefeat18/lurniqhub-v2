@@ -1,0 +1,10 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv", "venv", "node_modules", "data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "C4", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"test_smoke.py" = ["S101"]
