@@ -1,0 +1,8 @@
+node_modules/
+.venv/
+venv/
+data/
+templates/
+src/templates/
+package-lock.json
+*.min.js
